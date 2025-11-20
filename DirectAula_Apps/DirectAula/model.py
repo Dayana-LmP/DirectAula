@@ -56,3 +56,20 @@ class Asistencia:
     
     def set_estado(self, estado):
         self._estado = estado
+
+class Grupo:
+    """Representa un Grupo (o curso) académico."""
+    # Nota: Usaremos el id como clave primaria interna, y el nombre/ciclo para BR.1
+    def __init__(self, grupo_id, nombre, ciclo_escolar):
+        self._grupo_id = grupo_id # Usado internamente para referencias
+        self._nombre = nombre
+        self._ciclo_escolar = ciclo_escolar
+
+    def get_id(self):
+        return self._grupo_id
+
+    def get_nombre(self):
+        return self._nombre
+    
+    def get_ciclo(self):
+        return self._ciclo_escolar

@@ -1,12 +1,16 @@
-# app.py (En la carpeta DirectAula)
+# DirectAula/app.py (Actualizado)
 
 import sys
+import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QStyleFactory
 )
 from PyQt5.QtCore import Qt
-from Presentacion.ventana_alumnos import VentanaAlumnos # <-- Importación Modular
-from Presentacion.ventana_asistencia import VentanaAsistencia # <-- Importación Modular
+# Importaciones Modulares:
+from Presentacion.ventana_grupos import VentanaGrupos # <-- NUEVA IMPORTACIÓN CU1
+from Presentacion.ventana_alumnos import VentanaAlumnos 
+from Presentacion.ventana_asistencia import VentanaAsistencia
+from Presentacion.seleccion_grupo import SeleccionGrupo
 
 class VentanaMenuPrincipal(QMainWindow):
     def __init__(self):
@@ -14,37 +18,47 @@ class VentanaMenuPrincipal(QMainWindow):
         self.setWindowTitle("DirectAula - Sistema de Gestión")
         self.resize(400, 300)
         
-        # Contenedor central
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
         layout = QVBoxLayout(central_widget)
         
-        # 💡 Título
         lbl_titulo = QLabel("DirectAula - Menú Principal")
         lbl_titulo.setObjectName("titulo_principal")
         lbl_titulo.setAlignment(Qt.AlignCenter)
         layout.addWidget(lbl_titulo)
 
-        # 1. Botón CU2: Administrar Alumnos
+        # 1. Botón CU1: Administrar Grupos (NUEVO)
+        btn_grupos = QPushButton("📚 CU1: Administrar Grupos")
+        btn_grupos.clicked.connect(self.abrir_ventana_grupos)
+        btn_grupos.setObjectName("btn_exportar") # Color azul
+        layout.addWidget(btn_grupos)
+
+        # 2. Botón CU2: Administrar Alumnos
         btn_alumnos = QPushButton("📋 CU2: Administrar Alumnos")
         btn_alumnos.clicked.connect(self.abrir_ventana_alumnos)
-        btn_alumnos.setObjectName("btn_exportar") # Color azul
+        btn_alumnos.setObjectName("btn_exportar") 
         layout.addWidget(btn_alumnos)
 
-        # 2. Botón CU4: Registrar Asistencia
+        # 3. Botón CU4: Registrar Asistencia
         btn_asistencia = QPushButton("✅ CU4: Registrar Asistencia")
         btn_asistencia.clicked.connect(self.abrir_ventana_asistencia)
-        btn_asistencia.setObjectName("btn_agregar") # Color verde
+        btn_asistencia.setObjectName("btn_agregar") 
         layout.addWidget(btn_asistencia)
         
-        # 3. Botón para otros CUs (Mockup)
+        # 4. Botón para otros CUs (Mockup)
         btn_otros = QPushButton("Otras Funcionalidades (Pendiente)")
         layout.addWidget(btn_otros)
 
+    def abrir_ventana_grupos(self):
+        """Lanza la ventana del Caso de Uso 1."""
+        self.ventana_grupos = VentanaGrupos() 
+        self.ventana_grupos.show()
+
     def abrir_ventana_alumnos(self):
         """Lanza la ventana del Caso de Uso 2."""
-        # Nota: Asumimos grupo_id=1 por ahora.
+        # NOTA: Por ahora, usamos un grupo_id fijo. Cuando el CU1 esté listo, esto
+        # deberá cambiarse para que se elija un grupo primero.
         self.ventana_alumnos = VentanaAlumnos(grupo_id=1) 
         self.ventana_alumnos.show()
         
@@ -58,13 +72,19 @@ if __name__ == '__main__':
     QApplication.setStyle(QStyleFactory.create('Fusion')) 
     app = QApplication(sys.argv)
     
-    # Aplicar el CSS desde la raíz (DirectAula/)
+    # 💡 CÓDIGO CORREGIDO PARA ENCONTRAR style.css SIEMPRE:
+    # 1. Obtiene la ruta del archivo actual (app.py)
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    # 2. Construye la ruta completa al archivo CSS
+    ruta_css = os.path.join(directorio_actual, 'style.css')
+    
     try:
-        with open('style.css', 'r') as f:
+        with open(ruta_css, 'r') as f: 
             app.setStyleSheet(f.read())
+        print(f"Éxito: style.css cargado desde: {ruta_css}")
     except FileNotFoundError:
-        print("Advertencia: El archivo style.css no fue encontrado.")
-
+        print(f"Advertencia: El archivo style.css no fue encontrado en la ruta: {ruta_css}")
+        
     ventana_principal = VentanaMenuPrincipal()
     ventana_principal.show()
     sys.exit(app.exec_())
