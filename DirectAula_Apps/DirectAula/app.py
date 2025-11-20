@@ -1,5 +1,3 @@
-# DirectAula/app.py (Actualizado)
-
 import sys
 import os
 from PyQt5.QtWidgets import (
@@ -43,7 +41,7 @@ class VentanaMenuPrincipal(QMainWindow):
         # 3. Botón CU4: Registrar Asistencia
         btn_asistencia = QPushButton("Registrar Asistencia")
         btn_asistencia.clicked.connect(self.abrir_ventana_asistencia)
-        btn_asistencia.setObjectName("btn_agregar") 
+        btn_asistencia.setObjectName("btn_exportar") 
         layout.addWidget(btn_asistencia)
         
         # 4. Botón para otros CUs (Mockup)
