@@ -8,12 +8,11 @@ class Alumno:
         self._nombre_completo = nombre_completo
         self._datos_contacto = datos_contacto
         self._email = email # Nuevo campo
-        self._grupo_id = None # Se asigna en el DAO/BLL
+        self._grupo_id = None # Para futuras referencias al grupo
 
     def get_matricula(self):
         return self._matricula
 
-    # 💡 CORRECCIÓN: Asegúrate que el método se llame get_nombre_completo
     def get_nombre_completo(self): 
         return self._nombre_completo 
 
