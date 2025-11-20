@@ -166,3 +166,4 @@ class AsistenciaDAO(BaseDAO):
             return []
         finally:
             self._desconectar()
+            

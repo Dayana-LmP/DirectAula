@@ -29,19 +29,19 @@ class VentanaMenuPrincipal(QMainWindow):
         layout.addWidget(lbl_titulo)
 
         # 1. Botón CU1: Administrar Grupos (NUEVO)
-        btn_grupos = QPushButton("📚 CU1: Administrar Grupos")
+        btn_grupos = QPushButton("Administrar Grupos")
         btn_grupos.clicked.connect(self.abrir_ventana_grupos)
         btn_grupos.setObjectName("btn_exportar") # Color azul
         layout.addWidget(btn_grupos)
 
         # 2. Botón CU2: Administrar Alumnos
-        btn_alumnos = QPushButton("📋 CU2: Administrar Alumnos")
+        btn_alumnos = QPushButton("Administrar Alumnos")
         btn_alumnos.clicked.connect(self.abrir_ventana_alumnos)
         btn_alumnos.setObjectName("btn_exportar") 
         layout.addWidget(btn_alumnos)
 
         # 3. Botón CU4: Registrar Asistencia
-        btn_asistencia = QPushButton("✅ CU4: Registrar Asistencia")
+        btn_asistencia = QPushButton("Registrar Asistencia")
         btn_asistencia.clicked.connect(self.abrir_ventana_asistencia)
         btn_asistencia.setObjectName("btn_agregar") 
         layout.addWidget(btn_asistencia)
