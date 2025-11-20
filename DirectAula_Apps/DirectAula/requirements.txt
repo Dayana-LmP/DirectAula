@@ -1,0 +1,26 @@
+# ----------------------------------------------------
+# DEPENDENCIAS REQUERIDAS# ----------------------------------------------------
+# DEPENDENCIAS REQUERIDAS PARA DIRECTAULA
+# ----------------------------------------------------
+
+# PyQt5: Biblioteca principal para la interfaz gráfica de escritorio.
+# Se listan tanto el módulo principal como el "sip" de PyQt5.
+PyQt5==5.15.10 
+PyQt5-sip==12.13.0 
+# (Nota: Se usa esta versión como referencia. Se pueden usar versiones más nuevas)
+
+# openpyxl: Requerido para el CU6 (Generar Reportes) para exportar datos a archivos .xlsx.
+openpyxl==3.1.2 
+
+# ----------------------------------------------------
+# NOTA SOBRE LIBRERÍAS ESTÁNDAR
+# ----------------------------------------------------
+# Módulos como 'sys', 'os', 'sqlite3', 'datetime', 'QDate', 'Qt', 'QMessageBox', 
+# etc., NO se incluyen en este archivo porque son parte de la 
+# 'Standard Library' (Librería Estándar) de Python y están disponibles 
+# inmediatamente al instalar Python (versión 3.x).
+
+# Como instalarlo
+#Abrir una terminal (ctrl + ñ) y luego poner el pip
+
+# pip install -r requirements.txt   <-- Comando para instalar todas las dependencias listadas en este archivo.
