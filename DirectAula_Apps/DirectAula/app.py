@@ -3,7 +3,7 @@
 import sys
 import os
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QStyleFactory
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QPushButton, QLabel, QStyleFactory, QDialog
 )
 from PyQt5.QtCore import Qt
 # Importaciones Modulares:
@@ -56,16 +56,24 @@ class VentanaMenuPrincipal(QMainWindow):
         self.ventana_grupos.show()
 
     def abrir_ventana_alumnos(self):
-        """Lanza la ventana del Caso de Uso 2."""
-        # NOTA: Por ahora, usamos un grupo_id fijo. Cuando el CU1 esté listo, esto
-        # deberá cambiarse para que se elija un grupo primero.
-        self.ventana_alumnos = VentanaAlumnos(grupo_id=1) 
-        self.ventana_alumnos.show()
+        """Lanza el diálogo de selección y luego la ventana de Alumnos (CU2)."""
+        dialogo = SeleccionGrupo("Administrar Alumnos", self)
+        if dialogo.exec_() == QDialog.Accepted:
+            grupo_id = dialogo.get_grupo_id()
+            nombre_grupo = dialogo.combo_grupos.currentText()
+            # 💡 Pasamos el ID del grupo y su nombre a la ventana de alumnos
+            self.ventana_alumnos = VentanaAlumnos(grupo_id=grupo_id, nombre_grupo=nombre_grupo) 
+            self.ventana_alumnos.show()
         
     def abrir_ventana_asistencia(self):
-        """Lanza la ventana del Caso de Uso 4."""
-        self.ventana_asistencia = VentanaAsistencia(grupo_id=1) 
-        self.ventana_asistencia.show()
+        """Lanza el diálogo de selección y luego la ventana de Asistencia (CU4)."""
+        dialogo = SeleccionGrupo("Registrar Asistencia", self)
+        if dialogo.exec_() == QDialog.Accepted:
+            grupo_id = dialogo.get_grupo_id()
+            nombre_grupo = dialogo.combo_grupos.currentText()
+            # 💡 Pasamos el ID del grupo y su nombre a la ventana de asistencia
+            self.ventana_asistencia = VentanaAsistencia(grupo_id=grupo_id, nombre_grupo=nombre_grupo) 
+            self.ventana_asistencia.show()
 
 
 if __name__ == '__main__':

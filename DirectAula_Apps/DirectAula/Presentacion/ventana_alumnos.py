@@ -62,23 +62,26 @@ class DialogoAlumno(QDialog):
 # ===============================================
 
 class VentanaAlumnos(QWidget):
-    """Interfaz gráfica de PyQt5 para el UC-2: Administrar Alumnos."""
-
-    def __init__(self, grupo_id=1):
+    # Asegúrate de que __init__ ahora recibe y guarda nombre_grupo
+    def __init__(self, grupo_id, nombre_grupo): 
         super().__init__()
-        self.setWindowTitle("DirectAula - Administrar Alumnos (UC-2)")
-        self.resize(1000, 600)
-        self.gestor = GestorAlumnos(grupo_id) 
-        self._inicializar_ui()
+        self._grupo_id = grupo_id
+        self._nombre_grupo = nombre_grupo
+        self.setWindowTitle(f"DirectAula - Alumnos del grupo: {self._nombre_grupo}") # Título dinámico
+        
+        self.resize(750, 500)
+        self.gestor = GestorAlumnos(self._grupo_id)
+        self._inicializar_ui(self._nombre_grupo) 
         self._cargar_datos()
 
-    def _inicializar_ui(self):
+    def _inicializar_ui(self, nombre_grupo): 
         main_layout = QVBoxLayout()
         
-        # 💡 TÍTULO PRINCIPAL: "DirectAula - Administración de estudiantes"
-        self.lbl_titulo_principal = QLabel("DirectAula - Administración de estudiantes")
-        self.lbl_titulo_principal.setObjectName("titulo_principal") # Aplica el estilo #003366, negritas, 24px
-        main_layout.addWidget(self.lbl_titulo_principal)
+        # Usar el nombre en la etiqueta principal
+        lbl_titulo = QLabel(f"Gestión de Alumnos: {nombre_grupo}") 
+        lbl_titulo.setObjectName("titulo_principal")
+        
+        main_layout.addWidget(lbl_titulo)
         
         # --- SECCIÓN BÚSQUEDA Y ACCIONES ---
         
