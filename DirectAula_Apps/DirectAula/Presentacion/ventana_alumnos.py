@@ -18,26 +18,31 @@ class DialogoAlumno(QDialog):
         super().__init__(parent)
         self.datos_alumno = datos_alumno 
         self.setWindowTitle("Registrar Alumno" if not datos_alumno else "Editar Alumno")
-        
+        self._inicializar_ui(datos_alumno)
+    
+    def _inicializar_ui(self, datos_alumno):
         layout = QFormLayout()
         
         self.campo_matricula = QLineEdit()
         self.campo_nombre = QLineEdit()
         self.campo_contacto = QLineEdit()
-        self.campo_email = QLineEdit() 
+        self.campo_email = QLineEdit() # 💡 CAMPO NUEVO PARA EMAIL
         
+        # Si se están editando datos, precargarlos
         if datos_alumno:
+            # datos_alumno = [matricula, nombre, contacto, email]
             self.campo_matricula.setText(datos_alumno[0])
+            self.campo_matricula.setEnabled(False) # No se puede cambiar la matrícula
             self.campo_nombre.setText(datos_alumno[1])
             self.campo_contacto.setText(datos_alumno[2])
-            self.campo_email.setText(datos_alumno[3] if len(datos_alumno) > 3 else "")
-            self.campo_matricula.setDisabled(True)
+            self.campo_email.setText(datos_alumno[3]) # 💡 CARGAR EMAIL
+            
+        layout.addRow("Matrícula *", self.campo_matricula)
+        layout.addRow("Nombre Completo *", self.campo_nombre)
+        layout.addRow("Datos de Contacto", self.campo_contacto)
+        layout.addRow("Email", self.campo_email) # 💡 AÑADIR EMAIL AL FORMULARIO
 
-        layout.addRow(QLabel("Matrícula *"), self.campo_matricula)
-        layout.addRow(QLabel("Nombre Completo *"), self.campo_nombre)
-        layout.addRow(QLabel("Datos de Contacto"), self.campo_contacto)
-        layout.addRow(QLabel("Email"), self.campo_email)
-
+        # ... (código botones) ...
         self.botones = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.botones.accepted.connect(self.accept)
         self.botones.rejected.connect(self.reject)
@@ -46,14 +51,12 @@ class DialogoAlumno(QDialog):
         self.setLayout(layout)
 
     def get_data(self):
-        """Retorna los datos ingresados."""
-        matricula = self.datos_alumno[0] if self.datos_alumno else self.campo_matricula.text().strip()
-        
+        """Retorna los 4 campos obligatorios y el email."""
         return (
-            matricula,
+            self.campo_matricula.text().strip(),
             self.campo_nombre.text().strip(),
             self.campo_contacto.text().strip(),
-            self.campo_email.text().strip()
+            self.campo_email.text().strip() # 💡 DEBE RETORNAR EL EMAIL
         )
 
 
@@ -173,26 +176,27 @@ class VentanaAlumnos(QWidget):
         return item.text() if item is not None else ""
 
     def _mostrar_formulario(self, datos_alumno=None):
-        """Función unificada para agregar o editar (FA.1 y FA.2)."""
+        """Función unificada para agregar o editar."""
         dialogo = DialogoAlumno(datos_alumno, self)
+        
         if dialogo.exec_() == QDialog.Accepted:
             
-            # Obtener los 4 parámetros
+            # 💡 DEBE DESEMPAQUETAR 4 VALORES
             matricula, nombre, contacto, email = dialogo.get_data() 
             
             if datos_alumno is None:
-                # Lógica Agregar (C)
-                resultado_mensaje = self.gestor.agregar_nuevo_alumno(matricula, nombre, contacto, email) 
+                # Lógica Agregar
+                # 💡 LLAMAR CON 4 ARGUMENTOS
+                resultado_mensaje = self.gestor.agregar_nuevo_alumno(matricula, nombre, contacto, email)
             else:
-                # Lógica Editar (U)
-                resultado_mensaje = self.gestor.actualizar_datos_alumno(matricula, nombre, contacto, email) 
-            
+                # Lógica Editar (la matrícula ya está definida en el diálogo)
+                # 💡 LLAMAR CON 4 ARGUMENTOS
+                resultado_mensaje = self.gestor.actualizar_datos_alumno(matricula, nombre, contacto, email)
             if "Error" in resultado_mensaje:
-                # 💡 Esto maneja el error de 'Matrícula y Nombre son obligatorios' (Add y Edit)
-                QMessageBox.critical(self, "Error", resultado_mensaje) 
+                QMessageBox.critical(self, "Error", resultado_mensaje)
             else:
                 QMessageBox.information(self, "Operación Exitosa", resultado_mensaje)
-                self._cargar_datos() 
+                self._cargar_datos()
 
     def _mostrar_formulario_editar(self):
         """CORREGIDO: Prepara los datos de la fila seleccionada (U) manejando errores."""
