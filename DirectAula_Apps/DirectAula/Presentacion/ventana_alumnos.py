@@ -1,5 +1,4 @@
-# main.py (Código robusto y corregido)
-
+# Caso de uso 2
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTableWidget, 
