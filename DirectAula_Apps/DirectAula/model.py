@@ -1,32 +1,30 @@
 
 # model.py
 class Alumno:
-    """Representa a un estudiante. Implementa Encapsulamiento."""
+    """Representa un estudiante dentro de un grupo."""
     
-    # 💡 CAMBIO: Añadir email al constructor
-    def __init__(self, matricula, nombre_completo, datos_contacto="", email=""):
+    def __init__(self, matricula, nombre_completo, datos_contacto, email):
         self._matricula = matricula
         self._nombre_completo = nombre_completo
         self._datos_contacto = datos_contacto
         self._email = email # Nuevo campo
-        
-    # Getters
+        self._grupo_id = None # Se asigna en el DAO/BLL
+
     def get_matricula(self):
         return self._matricula
 
-    def get_nombre(self):
-        return self._nombre_completo
+    # 💡 CORRECCIÓN: Asegúrate que el método se llame get_nombre_completo
+    def get_nombre_completo(self): 
+        return self._nombre_completo 
 
     def get_datos_contacto(self):
         return self._datos_contacto
-
-    # 💡 CAMBIO: Getter para Email
+        
     def get_email(self):
         return self._email
-        
     # Setters
-    def set_nombre(self, nombre):
-        self._nombre_completo = nombre
+    def set_nombre_completo(self, nombre_completo):
+        self._nombre_completo = nombre_completo
         
     def set_datos_contacto(self, contacto):
         self._datos_contacto = contacto

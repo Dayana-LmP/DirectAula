@@ -65,15 +65,17 @@ class DialogoAlumno(QDialog):
 # ===============================================
 
 class VentanaAlumnos(QWidget):
-    # Asegúrate de que __init__ ahora recibe y guarda nombre_grupo
     def __init__(self, grupo_id, nombre_grupo): 
         super().__init__()
-        self._grupo_id = grupo_id
-        self._nombre_grupo = nombre_grupo
-        self.setWindowTitle(f"DirectAula - Alumnos del grupo: {self._nombre_grupo}") # Título dinámico
         
+        self._grupo_id = grupo_id
+        self._nombre_grupo = nombre_grupo # Guardamos el nombre del grupo
+        
+        self.setWindowTitle(f"DirectAula - Alumnos del grupo: {self._nombre_grupo}") 
         self.resize(750, 500)
-        self.gestor = GestorAlumnos(self._grupo_id)
+        self.gestor = GestorAlumnos(self._grupo_id) 
+        
+        # 💡 CORRECCIÓN: Pasar el argumento self._nombre_grupo
         self._inicializar_ui(self._nombre_grupo) 
         self._cargar_datos()
 

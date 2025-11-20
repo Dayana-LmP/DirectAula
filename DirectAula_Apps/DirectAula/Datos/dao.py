@@ -138,9 +138,17 @@ class AsistenciaDAO(BaseDAO):
         return self.ejecutar_query(query, params)
     
     def obtener_asistencia_del_dia(self, fecha, grupo_id):
+        """
+        Retorna la lista de todos los alumnos de un grupo junto con su estado de
+        asistencia para una fecha dada.
+        """
+        # 💡 CONSULTA CORREGIDA: Usa LEFT JOIN para incluir a todos los alumnos.
+        # COALESCE convierte NULL (si no hay registro de asistencia) en 'Ausente'.
         query = """
             SELECT 
-                A.matricula, A.nombre_completo, COALESCE(S.estado, 'Ausente') 
+                A.matricula, 
+                A.nombre_completo, 
+                COALESCE(S.estado, 'Ausente') 
             FROM alumnos A
             LEFT JOIN asistencia S 
             ON A.matricula = S.matricula AND S.fecha = ?
@@ -149,10 +157,12 @@ class AsistenciaDAO(BaseDAO):
         """
         try:
             self._conectar()
-            self.cursor.execute(query, (fecha, grupo_id))
+            # 💡 PARÁMETROS: (fecha, grupo_id)
+            self.cursor.execute(query, (fecha, grupo_id)) 
             return self.cursor.fetchall()
         except Exception as e:
             print(f"Error al obtener asistencia: {e}")
+            # Si hay un error SQL, devuelve una lista vacía para evitar un crash.
             return []
         finally:
             self._desconectar()
