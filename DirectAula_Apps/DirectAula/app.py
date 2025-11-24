@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 # Importaciones Modulares:
-from Presentacion.ventana_grupos import VentanaGrupos # <-- NUEVA IMPORTACIÓN CU1
+from Presentacion.ventana_grupos import VentanaGrupos 
 from Presentacion.ventana_calificaciones_menu import VentanaCalificacionesMenu
 from Presentacion.ventana_alumnos import VentanaAlumnos 
 from Presentacion.ventana_asistencia import VentanaAsistencia
@@ -46,14 +46,10 @@ class VentanaMenuPrincipal(QMainWindow):
         layout.addWidget(btn_asistencia)
 
         # 4. Botón CU3/CU5: Calificaciones
-        btn_calificaciones = QPushButton("Calificaciones")
+        btn_calificaciones = QPushButton("Registar Calificaciones")
         btn_calificaciones.clicked.connect(self.abrir_ventana_calificaciones)
-        btn_calificaciones.setObjectName("btn_exportar") # Color azul
+        btn_calificaciones.setObjectName("btn_exportar") 
         layout.addWidget(btn_calificaciones)
-        
-        # 5. Botón para otros CUs (Mockup)
-        btn_otros = QPushButton("Otras Funcionalidades (Pendiente)")
-        layout.addWidget(btn_otros)
 
     def abrir_ventana_grupos(self):
         """Lanza la ventana del Caso de Uso 1."""

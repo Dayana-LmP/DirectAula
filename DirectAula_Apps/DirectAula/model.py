@@ -71,23 +71,19 @@ class Grupo:
     def get_ciclo(self):
         return self._ciclo_escolar
 
-class Ponderacion:
-    """Representa la estructura de pesos y total de tareas para un Grupo (BR.14)."""
+class CategoriaEvaluacion:
+    """Representa una categoría de evaluación (ponderación) flexible para un grupo."""
     
-    def __init__(self, grupo_id, asist_peso, examen_peso, part_peso, tareas_peso, total_tareas):
+    def __init__(self, grupo_id, nombre_categoria, peso_porcentual, max_items=1):
         self._grupo_id = grupo_id
-        self._asistencia_peso = asist_peso
-        self._examen_peso = examen_peso
-        self._participacion_peso = part_peso
-        self._tareas_peso = tareas_peso
-        self._total_tareas = total_tareas
+        self._nombre_categoria = nombre_categoria # Ej: "Proyecto Final", "Cuestionario 1", "Tareas"
+        self._peso_porcentual = peso_porcentual
+        self._max_items = max_items # Útil para tareas/participaciones (Total de Tareas)
 
     def get_grupo_id(self): return self._grupo_id
-    def get_asistencia_peso(self): return self._asistencia_peso
-    def get_examen_peso(self): return self._examen_peso
-    def get_participacion_peso(self): return self._participacion_peso
-    def get_tareas_peso(self): return self._tareas_peso
-    def get_total_tareas(self): return self._total_tareas
+    def get_nombre_categoria(self): return self._nombre_categoria
+    def get_peso_porcentual(self): return self._peso_porcentual
+    def get_max_items(self): return self._max_items
 
 
 class Calificacion:

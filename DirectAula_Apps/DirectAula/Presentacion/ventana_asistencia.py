@@ -1,4 +1,3 @@
-# presentacion/ventana_asistencia.py (Código COMPLETO y CORREGIDO)
 
 import sys
 from PyQt5.QtWidgets import (
@@ -50,7 +49,7 @@ class VentanaAsistencia(QWidget):
         control_layout.addWidget(self.fecha_asistencia, 0, 1)
 
         # 2. Botón de Registro Masivo
-        self.btn_masivo = QPushButton("✅ Poner 'Presente' a Todos")
+        self.btn_masivo = QPushButton("|Poner 'Asistencia' a Todos")
         self.btn_masivo.setObjectName("btn_agregar")
         self.btn_masivo.clicked.connect(self._registrar_asistencia_masiva)
         

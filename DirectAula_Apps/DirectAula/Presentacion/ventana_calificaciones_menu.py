@@ -23,13 +23,13 @@ class VentanaCalificacionesMenu(QWidget):
         layout.addWidget(lbl_titulo)
 
         # CU3: Administrar Ponderación
-        btn_ponderacion = QPushButton("1. ⚖️ Administrar Ponderación (CU3)")
-        btn_ponderacion.setObjectName("btn_editar")
+        btn_ponderacion = QPushButton("1. Administrar Ponderación")
+        btn_ponderacion.setObjectName("btn_agregar")
         btn_ponderacion.clicked.connect(self.abrir_ponderacion)
         layout.addWidget(btn_ponderacion)
 
         # CU5: Registrar Calificaciones
-        btn_registro = QPushButton("2. 📝 Registrar Calificaciones (CU5)")
+        btn_registro = QPushButton("2. Registrar Calificaciones")
         btn_registro.setObjectName("btn_agregar")
         btn_registro.clicked.connect(self.abrir_registro)
         layout.addWidget(btn_registro)
