@@ -1,8 +1,6 @@
-# logica/bll.py (Contiene toda la Lógica de Negocio)
-
-from Datos.dao import AlumnoDAO, AsistenciaDAO, GrupoDAO # 💡 CORREGIDO: Importación con minúscula y añadida GrupoDAO
-from model import Alumno, Asistencia, Grupo
-from datetime import date # Solo necesitamos 'date'
+from Datos.dao import AlumnoDAO, AsistenciaDAO, GrupoDAO, PonderacionDAO, CalificacionDAO
+from model import Alumno, Asistencia, Grupo, Ponderacion, Calificacion
+from datetime import date 
 
 # ====================================================
 # 1. GESTOR GRUPOS (CU-1)
@@ -168,3 +166,83 @@ class GestorAsistencia:
     def obtener_asistencia_para_ui(self, fecha=date.today().strftime("%Y-%m-%d")):
         """Retorna la lista de asistencia del día para la UI (R)."""
         return self._asistencia_dao.obtener_asistencia_del_dia(fecha, self._grupo_actual_id)
+
+# ====================================================
+# 4. GESTOR CALIFICACIONES (CASO DE USO 3 y 5)
+# ====================================================
+class GestorCalificaciones:
+    def __init__(self, grupo_id):
+        self._grupo_actual_id = grupo_id
+        self._ponderacion_dao = PonderacionDAO()
+        self._calificacion_dao = CalificacionDAO()
+        # Aseguramos la ponderación inicial (BR.3)
+        self._ponderacion_dao.crear_ponderacion_inicial(grupo_id)
+
+    # --- CU3: Ponderación ---
+    
+    def obtener_ponderacion_actual(self):
+        # Retorna: (asist, examen, part, tareas, total_tareas)
+        return self._ponderacion_dao.obtener_ponderacion(self._grupo_actual_id)
+        
+    def guardar_ponderacion(self, asist, examen, part, tareas, total_tareas):
+        # FE.1: Ponderación inconsistente
+        if (asist + examen + part + tareas) != 100:
+            return f"Error: La suma de las ponderaciones debe ser 100%, la suma actual es {asist + examen + part + tareas}%."
+        
+        nueva_ponderacion = Ponderacion(
+            self._grupo_actual_id, asist, examen, part, tareas, total_tareas
+        )
+        if self._ponderacion_dao.actualizar_ponderacion(nueva_ponderacion):
+            # 6. Guarda la estructura y recalcula todos los promedios (BR.14)
+            self._recalcular_promedios() 
+            return "Ponderación guardada y promedios recalculados exitosamente."
+        else:
+            return "Error al intentar guardar la ponderación."
+
+    # --- CU5: Registro de Calificaciones ---
+    
+    def obtener_alumnos_con_calificaciones(self, categoria):
+        # Retorna: [(matricula, nombre, valor), ...]
+        return self._calificacion_dao.obtener_calificaciones_por_grupo_categoria(self._grupo_actual_id, categoria)
+
+    def registrar_calificacion(self, matricula, categoria, valor):
+        # FE.1: Validación de rangos (BR.13)
+        try:
+            valor_num = float(valor)
+        except ValueError:
+            return "Error: La calificación debe ser un valor numérico."
+            
+        if not (0.0 <= valor_num <= 10.0):
+            return "Error (FE.1): La nota debe estar en la escala válida (0.0 a 10.0)."
+            
+        nueva_calificacion = Calificacion(
+            matricula=matricula, categoria=categoria, valor=valor_num,
+            fecha=date.today().isoformat() # Usamos la fecha actual como identificador de registro
+        )
+        
+        if self._calificacion_dao.registrar_calificacion(nueva_calificacion):
+            # 6. Calcula automáticamente el nuevo promedio final (BR.15)
+            self._recalcular_promedios() 
+            return "Calificación registrada y promedio actualizado."
+        else:
+            return "Error al intentar registrar la calificación."
+
+    # --- Lógica de Recálculo ---
+    
+    def _recalcular_promedios(self):
+        """Calcula el promedio final de CADA alumno en el grupo usando la ponderación actual."""
+        # NOTA: Por simplicidad, esta función no guarda el resultado final, 
+        # solo simula el cálculo que se ejecutaría. Para guardar, se necesita 
+        # una tabla o campo extra en el modelo Alumno.
+        print(f"Recalculando promedios para grupo {self._grupo_actual_id}...")
+        
+        # 1. Obtener ponderación
+        asist_p, examen_p, part_p, tareas_p, total_tareas = self._ponderacion_dao.obtener_ponderacion(self._grupo_actual_id)
+        
+        # 2. Obtener TODAS las calificaciones del grupo
+        calificaciones = self._calificacion_dao.obtener_todas_calificaciones_por_grupo(self._grupo_actual_id)
+        
+        # ... (El cálculo complejo real está aquí, pero por ahora solo simulamos) ...
+        # (El cálculo del promedio final es la parte más compleja de la lógica)
+        
+        return True

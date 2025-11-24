@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 # Importaciones Modulares:
 from Presentacion.ventana_grupos import VentanaGrupos # <-- NUEVA IMPORTACIÓN CU1
+from Presentacion.ventana_calificaciones_menu import VentanaCalificacionesMenu
 from Presentacion.ventana_alumnos import VentanaAlumnos 
 from Presentacion.ventana_asistencia import VentanaAsistencia
 from Presentacion.seleccion_grupo import SeleccionGrupo
@@ -43,8 +44,14 @@ class VentanaMenuPrincipal(QMainWindow):
         btn_asistencia.clicked.connect(self.abrir_ventana_asistencia)
         btn_asistencia.setObjectName("btn_exportar") 
         layout.addWidget(btn_asistencia)
+
+        # 4. Botón CU3/CU5: Calificaciones
+        btn_calificaciones = QPushButton("Calificaciones")
+        btn_calificaciones.clicked.connect(self.abrir_ventana_calificaciones)
+        btn_calificaciones.setObjectName("btn_exportar") # Color azul
+        layout.addWidget(btn_calificaciones)
         
-        # 4. Botón para otros CUs (Mockup)
+        # 5. Botón para otros CUs (Mockup)
         btn_otros = QPushButton("Otras Funcionalidades (Pendiente)")
         layout.addWidget(btn_otros)
 
@@ -52,6 +59,7 @@ class VentanaMenuPrincipal(QMainWindow):
         """Lanza la ventana del Caso de Uso 1."""
         self.ventana_grupos = VentanaGrupos() 
         self.ventana_grupos.show()
+    
 
     def abrir_ventana_alumnos(self):
         """Lanza el diálogo de selección y luego la ventana de Alumnos (CU2)."""
@@ -72,6 +80,15 @@ class VentanaMenuPrincipal(QMainWindow):
             # 💡 Pasamos el ID del grupo y su nombre a la ventana de asistencia
             self.ventana_asistencia = VentanaAsistencia(grupo_id=grupo_id, nombre_grupo=nombre_grupo) 
             self.ventana_asistencia.show()
+    
+    def abrir_ventana_calificaciones(self):
+        """Lanza el diálogo de selección y luego la ventana del menú de Calificaciones."""
+        dialogo = SeleccionGrupo("Gestión de Calificaciones", self)
+        if dialogo.exec_() == QDialog.Accepted:
+            grupo_id = dialogo.get_grupo_id()
+            nombre_grupo = dialogo.combo_grupos.currentText()
+            self.ventana_calificaciones = VentanaCalificacionesMenu(grupo_id=grupo_id, nombre_grupo=nombre_grupo)
+            self.ventana_calificaciones.show()
 
 
 if __name__ == '__main__':
