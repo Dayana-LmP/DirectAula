@@ -75,11 +75,14 @@ class BaseDAO:
         self._con = sqlite3.connect(self._db_file)
         self._con.execute("PRAGMA foreign_keys = ON;") # Permite la integridad referencial
         self.cursor = self._con.cursor()
+        return self._con
 
-    def _desconectar(self):
-        if self._con:
-            self._con.close()
-            self._con = None
+    def _desconectar(self, conn=None):
+        connection = conn or self._con
+        if connection:
+            connection.close()
+            if conn is None:
+                self._con = None
 
     def ejecutar_query(self, query, params=()):
         try:
@@ -93,26 +96,19 @@ class BaseDAO:
             # 💡 Esto es útil para el debugging de errores SQL.
             print(f"Error al ejecutar consulta: {e}") 
             return False
-        finally:
-            self._desconectar()
-        
     def ejecutar_queries_multiples(self, query: str, params_list: list[tuple]):
         """Ejecuta una sola query varias veces con diferentes parámetros en una transacción."""
-        conn = self._conectar()
-        if conn is None:
-            return False
-        
         try:
-            cursor = conn.cursor()
-            cursor.executemany(query, params_list)
-            conn.commit()
+            self._conectar()
+            self.cursor.executemany(query, params_list)
+            self._con.commit()
             return True
         except sqlite3.Error as e:
             print(f"Error al ejecutar múltiples queries: {e}")
-            conn.rollback()
+            self._con.rollback()
             return False
         finally:
-            self._desconectar(conn)
+            self._desconectar()
 
 # ====================================================
 # 1. GRUPO DAO (CASO DE USO 1) 
@@ -172,17 +168,26 @@ class AlumnoDAO(BaseDAO):
 # ====================================================
 # 3. ASISTENCIA DAO (CASO DE USO 4)
 # ====================================================
+
+
 class AsistenciaDAO(BaseDAO):
     """Maneja las operaciones CRUD para el registro de Asistencia."""
 
-    def registrar_asistencia(self, matricula, fecha, estado):
-        query = """
-            INSERT OR REPLACE INTO asistencia (matricula, fecha, estado) 
-            VALUES (?, ?, ?)
-        """
-        # Asegúrate de que el estado sea el string 'Presente', 'Ausente', etc.
-        return self.ejecutar_query(query, (matricula, fecha, estado))
-    
+    def registrar_asistencia(self, matricula, fecha=None, estado="Presente"):
+        # Permite llamadas con solo la matrícula; usa la fecha de hoy si no se proporciona.
+        # También acepta un objeto Asistencia y extrae sus atributos para no pasar
+        # el objeto entero como parámetro a sqlite3 (causa: "type 'Asistencia' is not supported").
+        if isinstance(matricula, Asistencia):
+            asistencia_obj = matricula
+            matricula = asistencia_obj.get_matricula()
+            fecha = asistencia_obj.get_fecha() or date.today().isoformat()
+            estado = asistencia_obj.get_estado() or "Presente"
+        else:
+            if fecha is None:
+                fecha = date.today().isoformat()
+        query = "REPLACE INTO asistencia (matricula, fecha, estado) VALUES (?, ?, ?)"
+        params = (matricula, fecha, estado)
+        return self.ejecutar_query(query, params)
     def obtener_asistencia_del_dia(self, fecha, grupo_id):
         """
         Retorna la lista de todos los alumnos de un grupo junto con su estado de
