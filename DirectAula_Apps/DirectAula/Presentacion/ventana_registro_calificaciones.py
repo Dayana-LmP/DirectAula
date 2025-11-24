@@ -1,11 +1,11 @@
-# presentacion/ventana_registro_calificaciones.py (VERSIÓN FINAL CORREGIDA)
+
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QComboBox, 
     QLabel, QPushButton, QMessageBox, QTableWidgetItem, QHeaderView
 )
 from PyQt5.QtCore import Qt
-from Logica.gestor_alumnos import GestorCalificaciones # Asegúrate que tu importación sea 'logica.bll' o 'Logica.gestor_alumnos' según tu estructura real.
+from Logica.gestor_alumnos import GestorCalificaciones 
 
 class VentanaRegistroCalificaciones(QWidget):
     """Ventana para el Caso de Uso 5: Registrar Calificaciones."""
@@ -19,7 +19,7 @@ class VentanaRegistroCalificaciones(QWidget):
         self.setWindowTitle(f"Registro de Calificaciones - {nombre_grupo}")
         self.resize(800, 600)
         
-        # ✅ 2. CORRECCIÓN CLAVE: Inicializar la lista de categorías ANTES de construir la UI
+
         self._categorias_activas = self._obtener_nombres_categorias() 
         
         self._inicializar_ui()

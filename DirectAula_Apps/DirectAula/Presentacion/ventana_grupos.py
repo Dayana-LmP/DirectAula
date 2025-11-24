@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QMessageBox, QDialog, QFormLayout, QDialogButtonBox,
     QLabel, QTableWidgetItem, QHeaderView
 )
-from Logica.gestor_alumnos import GestorGrupos # <-- IMPORTACIÓN MODULAR
+from Logica.gestor_alumnos import GestorGrupos 
 
 # ===============================================
 # CLASE DE DIÁLOGO PARA AGREGAR/EDITAR GRUPO

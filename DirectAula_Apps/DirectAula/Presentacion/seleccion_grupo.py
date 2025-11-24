@@ -24,7 +24,7 @@ class SeleccionGrupo(QDialog):
     def _inicializar_ui(self, titulo_accion):
         layout = QVBoxLayout(self)
         
-        lbl_instruccion = QLabel(f"Por favor, seleccione el grupo para **{titulo_accion}**:")
+        lbl_instruccion = QLabel(f"Por favor, seleccione el grupo para {titulo_accion} :")
         lbl_instruccion.setObjectName("subtitulo")
         layout.addWidget(lbl_instruccion)
         

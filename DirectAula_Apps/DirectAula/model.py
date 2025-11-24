@@ -7,8 +7,8 @@ class Alumno:
         self._matricula = matricula
         self._nombre_completo = nombre_completo
         self._datos_contacto = datos_contacto
-        self._email = email # Nuevo campo
-        self._grupo_id = None # Para futuras referencias al grupo
+        self._email = email 
+        self._grupo_id = None #Referencia al grupo al que pertenece
 
     def get_matricula(self):
         return self._matricula
