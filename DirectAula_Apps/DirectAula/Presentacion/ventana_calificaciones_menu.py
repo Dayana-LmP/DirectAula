@@ -3,8 +3,7 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox
 from PyQt5.QtCore import Qt
 from Presentacion.ventana_ponderacion import VentanaPonderacion 
-from Presentacion.ventana_registro_calificaciones import VentanaRegistroCalificaciones # Aún no existe
-
+from Presentacion.ventana_registro_calificaciones import VentanaRegistroCalificaciones 
 class VentanaCalificacionesMenu(QWidget):
     def __init__(self, grupo_id, nombre_grupo, parent=None):
         super().__init__(parent)

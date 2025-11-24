@@ -17,7 +17,7 @@ class VentanaAsistencia(QWidget):
         super().__init__()
         self._grupo_id = grupo_id # Usar el ID real
         self._nombre_grupo = nombre_grupo # Guardar el nombre
-        self.setWindowTitle(f"DirectAula - Asistencia para: {nombre_grupo}")
+        self.setWindowTitle(f"DirectAula - Asistencia {nombre_grupo}")
         self.resize(800, 600)
         
         # El gestor ahora solo necesita el grupo_id al ser instanciado
@@ -49,7 +49,7 @@ class VentanaAsistencia(QWidget):
         control_layout.addWidget(self.fecha_asistencia, 0, 1)
 
         # 2. Botón de Registro Masivo
-        self.btn_masivo = QPushButton("|Poner 'Asistencia' a Todos")
+        self.btn_masivo = QPushButton("Poner Asistencia a todos")
         self.btn_masivo.setObjectName("btn_agregar")
         self.btn_masivo.clicked.connect(self._registrar_asistencia_masiva)
         
@@ -73,7 +73,7 @@ class VentanaAsistencia(QWidget):
         # 1. Obtener la fecha seleccionada
         fecha = self.fecha_asistencia.date().toString("yyyy-MM-dd") 
         
-        # 2. Obtener los datos del BLL
+        # 2. Obtener los datos del gestor
         # Retorna: [(matricula, nombre, estado), ...]
         datos = self.gestor.obtener_asistencia_para_ui(fecha)
         
@@ -116,7 +116,7 @@ class VentanaAsistencia(QWidget):
         fecha = self.fecha_asistencia.date().toString("yyyy-MM-dd")
         
         confirmacion = QMessageBox.question(self, "Confirmar Registro",
-            f"¿Desea marcar a TODOS los alumnos como 'Presente' para la fecha {fecha}?",
+            f"¿Desea marcar a TODOS los alumnos como 'Asistencia' para la fecha {fecha}?",
             QMessageBox.Yes | QMessageBox.No)
 
         if confirmacion == QMessageBox.Yes:

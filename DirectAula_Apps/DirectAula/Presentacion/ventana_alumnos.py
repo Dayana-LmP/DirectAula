@@ -26,7 +26,7 @@ class DialogoAlumno(QDialog):
         self.campo_matricula = QLineEdit()
         self.campo_nombre = QLineEdit()
         self.campo_contacto = QLineEdit()
-        self.campo_email = QLineEdit() # 💡 CAMPO NUEVO PARA EMAIL
+        self.campo_email = QLineEdit() 
         
         # Si se están editando datos, precargarlos
         if datos_alumno:
@@ -35,14 +35,14 @@ class DialogoAlumno(QDialog):
             self.campo_matricula.setEnabled(False) # No se puede cambiar la matrícula
             self.campo_nombre.setText(datos_alumno[1])
             self.campo_contacto.setText(datos_alumno[2])
-            self.campo_email.setText(datos_alumno[3]) # 💡 CARGAR EMAIL
+            self.campo_email.setText(datos_alumno[3]) # 
             
-        layout.addRow("Matrícula *", self.campo_matricula)
-        layout.addRow("Nombre Completo *", self.campo_nombre)
+        layout.addRow("Matrícula ", self.campo_matricula)
+        layout.addRow("Nombre Completo ", self.campo_nombre)
         layout.addRow("Datos de Contacto", self.campo_contacto)
-        layout.addRow("Email", self.campo_email) # 💡 AÑADIR EMAIL AL FORMULARIO
+        layout.addRow("Email", self.campo_email) 
 
-        # ... (código botones) ...
+        #  botones
         self.botones = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
         self.botones.accepted.connect(self.accept)
         self.botones.rejected.connect(self.reject)
@@ -56,7 +56,7 @@ class DialogoAlumno(QDialog):
             self.campo_matricula.text().strip(),
             self.campo_nombre.text().strip(),
             self.campo_contacto.text().strip(),
-            self.campo_email.text().strip() # 💡 DEBE RETORNAR EL EMAIL
+            self.campo_email.text().strip() 
         )
 
 
@@ -99,7 +99,7 @@ class VentanaAlumnos(QWidget):
         
         # 1. Campo de Búsqueda (AC-2)
         self.campo_busqueda = QLineEdit()
-        self.campo_busqueda.setPlaceholderText("Buscar por nombre o matrícula (Búsqueda Rápida AC-2)...")
+        self.campo_busqueda.setPlaceholderText("Buscar por nombre o matrícula ")
         self.campo_busqueda.textChanged.connect(self._cargar_datos) 
         top_bar_layout.addWidget(self.campo_busqueda, 1)
 
@@ -183,7 +183,7 @@ class VentanaAlumnos(QWidget):
         
         if dialogo.exec_() == QDialog.Accepted:
             
-            # 💡 DEBE DESEMPAQUETAR 4 VALORES
+            #DEBE DESEMPAQUETAR 4 VALORES
             matricula, nombre, contacto, email = dialogo.get_data() 
             
             if datos_alumno is None:
@@ -207,7 +207,7 @@ class VentanaAlumnos(QWidget):
             QMessageBox.warning(self, "Advertencia", "Por favor, seleccione un alumno para editar.")
             return
 
-        # 💡 CORRECCIÓN APLICADA: Usamos la función segura para extraer los 4 campos.
+       
         datos_seleccionados = [
             self._get_cell_text_safe(fila_seleccionada, 0), # Matrícula
             self._get_cell_text_safe(fila_seleccionada, 1), # Nombre

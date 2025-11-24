@@ -50,16 +50,16 @@ class VentanaPonderacion(QWidget):
         # Botones de acción
         btn_layout = QHBoxLayout()
         
-        btn_agregar = QPushButton("➕ Añadir Categoría")
+        btn_agregar = QPushButton("Añadir Categoría")
         btn_agregar.clicked.connect(self._agregar_fila)
         btn_layout.addWidget(btn_agregar)
         
-        btn_eliminar = QPushButton("➖ Eliminar Categoría Seleccionada")
+        btn_eliminar = QPushButton("Eliminar Categoría Seleccionada")
         btn_eliminar.setObjectName("btn_eliminar")
         btn_eliminar.clicked.connect(self._eliminar_fila)
         btn_layout.addWidget(btn_eliminar)
         
-        btn_guardar = QPushButton("💾 Guardar Estructura")
+        btn_guardar = QPushButton("Guardar Estructura")
         btn_guardar.setObjectName("btn_agregar")
         btn_guardar.clicked.connect(self._guardar_ponderacion)
         btn_layout.addWidget(btn_guardar)
