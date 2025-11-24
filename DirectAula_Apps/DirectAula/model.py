@@ -70,3 +70,36 @@ class Grupo:
     
     def get_ciclo(self):
         return self._ciclo_escolar
+
+class Ponderacion:
+    """Representa la estructura de pesos y total de tareas para un Grupo (BR.14)."""
+    
+    def __init__(self, grupo_id, asist_peso, examen_peso, part_peso, tareas_peso, total_tareas):
+        self._grupo_id = grupo_id
+        self._asistencia_peso = asist_peso
+        self._examen_peso = examen_peso
+        self._participacion_peso = part_peso
+        self._tareas_peso = tareas_peso
+        self._total_tareas = total_tareas
+
+    def get_grupo_id(self): return self._grupo_id
+    def get_asistencia_peso(self): return self._asistencia_peso
+    def get_examen_peso(self): return self._examen_peso
+    def get_participacion_peso(self): return self._participacion_peso
+    def get_tareas_peso(self): return self._tareas_peso
+    def get_total_tareas(self): return self._total_tareas
+
+
+class Calificacion:
+    """Representa la nota específica de un alumno en una categoría (CU5)."""
+    
+    def __init__(self, matricula, categoria, valor, fecha=None):
+        self._matricula = matricula
+        self._categoria = categoria # Ej: 'Examen', 'Tarea_1', 'Participacion'
+        self._valor = valor
+        self._fecha = fecha 
+
+    def get_matricula(self): return self._matricula
+    def get_categoria(self): return self._categoria
+    def get_valor(self): return self._valor
+    def get_fecha(self): return self._fecha
