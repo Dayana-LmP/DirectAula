@@ -1,9 +1,8 @@
-# datos/dao.py (CONTENIDO COMPLETO Y CORREGIDO)
 
 from datetime import date
 import sqlite3
 # Asegúrate que las tres entidades del modelo estén importadas
-from model import Alumno, Asistencia, Calificacion, Grupo, Ponderacion, Ponderacion 
+from model import Alumno, Asistencia, Calificacion, CategoriaEvaluacion, Grupo
 
 # ====================================================
 # BASE DAO (Manejo de Conexión y Creación de Tablas)
@@ -39,13 +38,12 @@ class BaseDAO:
 
         # Creación de la tabla PONDERACIONES (CU3)
         self.ejecutar_query("""
-            CREATE TABLE IF NOT EXISTS ponderaciones (
-                grupo_id INTEGER PRIMARY KEY,
-                asistencia_peso REAL NOT NULL DEFAULT 10.0,
-                examen_peso REAL NOT NULL DEFAULT 40.0,
-                participacion_peso REAL NOT NULL DEFAULT 10.0,
-                tareas_peso REAL NOT NULL DEFAULT 40.0,
-                total_tareas INTEGER NOT NULL DEFAULT 10,
+            CREATE TABLE IF NOT EXISTS categorias_evaluacion (
+                grupo_id INTEGER NOT NULL,
+                nombre_categoria TEXT NOT NULL,
+                peso_porcentual REAL NOT NULL,
+                max_items INTEGER NOT NULL DEFAULT 1, -- Total de Tareas a considerar para categorías múltiples
+                PRIMARY KEY (grupo_id, nombre_categoria),
                 FOREIGN KEY (grupo_id) REFERENCES grupos(grupo_id) ON DELETE CASCADE
             );
         """)
@@ -97,9 +95,27 @@ class BaseDAO:
             return False
         finally:
             self._desconectar()
+        
+    def ejecutar_queries_multiples(self, query: str, params_list: list[tuple]):
+        """Ejecuta una sola query varias veces con diferentes parámetros en una transacción."""
+        conn = self._conectar()
+        if conn is None:
+            return False
+        
+        try:
+            cursor = conn.cursor()
+            cursor.executemany(query, params_list)
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al ejecutar múltiples queries: {e}")
+            conn.rollback()
+            return False
+        finally:
+            self._desconectar(conn)
 
 # ====================================================
-# 1. GRUPO DAO (CASO DE USO 1) ⬅️ ESTA ERA LA CLASE QUE FALTABA
+# 1. GRUPO DAO (CASO DE USO 1) 
 # ====================================================
 class GrupoDAO(BaseDAO):
     """Maneja las operaciones CRUD para la entidad Grupo."""
@@ -159,10 +175,13 @@ class AlumnoDAO(BaseDAO):
 class AsistenciaDAO(BaseDAO):
     """Maneja las operaciones CRUD para el registro de Asistencia."""
 
-    def registrar_asistencia(self, asistencia: Asistencia):
-        query = "REPLACE INTO asistencia (matricula, fecha, estado) VALUES (?, ?, ?)"
-        params = (asistencia.get_matricula(), asistencia.get_fecha(), asistencia.get_estado())
-        return self.ejecutar_query(query, params)
+    def registrar_asistencia(self, matricula, fecha, estado):
+        query = """
+            INSERT OR REPLACE INTO asistencia (matricula, fecha, estado) 
+            VALUES (?, ?, ?)
+        """
+        # Asegúrate de que el estado sea el string 'Presente', 'Ausente', etc.
+        return self.ejecutar_query(query, (matricula, fecha, estado))
     
     def obtener_asistencia_del_dia(self, fecha, grupo_id):
         """
@@ -195,40 +214,54 @@ class AsistenciaDAO(BaseDAO):
             self._desconectar()
 
 # ====================================================
-# 4. PONDERACION DAO (CASO DE USO 3)
+# 4. CATEGORIAEVALUACION DAO (Ponderación flexible - CU3)
 # ====================================================
-class PonderacionDAO(BaseDAO):
-    """Maneja las operaciones CRUD para la Ponderación por Grupo."""
+class CategoriaEvaluacionDAO(BaseDAO):
+    """Maneja las categorías de evaluación flexibles por Grupo."""
     
+    # BR.3 (Ponderación inicial por defecto) ahora se maneja insertando múltiples registros
     def crear_ponderacion_inicial(self, grupo_id):
-        # BR.3: Ponderación inicial por defecto (10, 40, 10, 40)
-        query = """
-            INSERT OR IGNORE INTO ponderaciones (grupo_id, asistencia_peso, examen_peso, participacion_peso, tareas_peso, total_tareas) 
-            VALUES (?, 10.0, 40.0, 10.0, 40.0, 10)
-        """
-        return self.ejecutar_query(query, (grupo_id,))
+        # La ponderación inicial por defecto (si se desea mantener una base)
+        categorias_base = [
+            (grupo_id, "Asistencia", 10.0, 1),
+            (grupo_id, "Examen Final", 40.0, 1),
+            (grupo_id, "Participación", 10.0, 5), # Total 5 participaciones
+            (grupo_id, "Tareas", 40.0, 10)      # Total 10 tareas
+        ]
+        query = "INSERT OR IGNORE INTO categorias_evaluacion (grupo_id, nombre_categoria, peso_porcentual, max_items) VALUES (?, ?, ?, ?)"
+        
+        for cat in categorias_base:
+            self.ejecutar_query(query, cat)
+        return True
 
-    def obtener_ponderacion(self, grupo_id):
-        query = "SELECT asistencia_peso, examen_peso, participacion_peso, tareas_peso, total_tareas FROM ponderaciones WHERE grupo_id = ?"
-        resultado = self.ejecutar_query(query, (grupo_id,))
-        if not resultado:
+    def obtener_categorias(self, grupo_id):
+        query = "SELECT nombre_categoria, peso_porcentual, max_items FROM categorias_evaluacion WHERE grupo_id = ?"
+        resultados = self.ejecutar_query(query, (grupo_id,))
+        
+        if not resultados:
+            # Si no hay categorías, crear las iniciales y reintentar
             self.crear_ponderacion_inicial(grupo_id)
-            return self.obtener_ponderacion(grupo_id)
-        return resultado[0] 
+            return self.obtener_categorias(grupo_id)
+            
+        # Retornamos objetos del modelo
+        lista_categorias = [
+            CategoriaEvaluacion(grupo_id, nombre, peso, items) 
+            for nombre, peso, items in resultados
+        ]
+        return lista_categorias 
 
-    def actualizar_ponderacion(self, ponderacion: Ponderacion):
-        query = """
-            UPDATE ponderaciones SET 
-                asistencia_peso = ?, examen_peso = ?, participacion_peso = ?, 
-                tareas_peso = ?, total_tareas = ? 
-            WHERE grupo_id = ?
-        """
-        params = (
-            ponderacion.get_asistencia_peso(), ponderacion.get_examen_peso(), 
-            ponderacion.get_participacion_peso(), ponderacion.get_tareas_peso(), 
-            ponderacion.get_total_tareas(), ponderacion.get_grupo_id()
-        )
-        return self.ejecutar_query(query, params)
+    def guardar_categorias(self, categorias: list[CategoriaEvaluacion], grupo_id):
+        # 1. Eliminar las categorías existentes para ese grupo
+        self.ejecutar_query("DELETE FROM categorias_evaluacion WHERE grupo_id = ?", (grupo_id,))
+        
+        # 2. Insertar las nuevas categorías
+        query = "INSERT INTO categorias_evaluacion (grupo_id, nombre_categoria, peso_porcentual, max_items) VALUES (?, ?, ?, ?)"
+        
+        params_list = [
+            (cat.get_grupo_id(), cat.get_nombre_categoria(), cat.get_peso_porcentual(), cat.get_max_items())
+            for cat in categorias
+        ]
+        return self.ejecutar_queries_multiples(query, params_list)
 
 # ====================================================
 # 5. CALIFICACION DAO (CASO DE USO 5)
