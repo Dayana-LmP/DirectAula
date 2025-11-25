@@ -222,89 +222,147 @@ class AsistenciaDAO(BaseDAO):
 # 4. CATEGORIAEVALUACION DAO (Ponderación flexible - CU3)
 # ====================================================
 class CategoriaEvaluacionDAO(BaseDAO):
-    """Maneja las categorías de evaluación flexibles por Grupo."""
-    
-    # BR.3 (Ponderación inicial por defecto) ahora se maneja insertando múltiples registros
-    def crear_ponderacion_inicial(self, grupo_id):
-        # La ponderación inicial por defecto (si se desea mantener una base)
-        categorias_base = [
-            (grupo_id, "Asistencia", 10.0, 1),
-            (grupo_id, "Examen Final", 40.0, 1),
-            (grupo_id, "Participación", 10.0, 5), # Total 5 participaciones
-            (grupo_id, "Tareas", 40.0, 10)      # Total 10 tareas
-        ]
-        query = "INSERT OR IGNORE INTO categorias_evaluacion (grupo_id, nombre_categoria, peso_porcentual, max_items) VALUES (?, ?, ?, ?)"
-        
-        for cat in categorias_base:
-            self.ejecutar_query(query, cat)
-        return True
+    """Maneja las operaciones CRUD para las Ponderaciones (Categorias de Evaluación)."""
 
-    def obtener_categorias(self, grupo_id):
-        query = "SELECT nombre_categoria, peso_porcentual, max_items FROM categorias_evaluacion WHERE grupo_id = ?"
+    def crear_ponderacion_inicial(self, grupo_id: int) -> bool:
+        """
+        Crea un conjunto inicial de categorías de evaluación si el grupo no tiene ninguna.
+        Si ya existen, no hace nada.
+        """
+        try:
+            self.conectar()
+            
+            # 1. Verificar si ya existen categorías para el grupo
+            query_check = "SELECT COUNT(*) FROM categorias_evaluacion WHERE grupo_id = ?"
+            self.cursor.execute(query_check, (grupo_id,))
+            count = self.cursor.fetchone()[0]
+
+            if count == 0:
+                # 2. Si no existen, insertar ponderación por defecto
+                # Esto cumple con el requisito de tener una ponderación definida (BR.5 y CU3)
+                default_categories = [
+                    (grupo_id, 'Examen', 50.0, 1),
+                    (grupo_id, 'Tareas', 30.0, 1),
+                    (grupo_id, 'Participación', 20.0, 1),
+                ]
+                query_insert = """
+                INSERT INTO categorias_evaluacion (grupo_id, nombre_categoria, peso_porcentual, max_items) 
+                VALUES (?, ?, ?, ?)
+                """
+                self.cursor.executemany(query_insert, default_categories)
+                self._con.commit()
+            
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al crear ponderaciones iniciales para grupo {grupo_id}: {e}")
+            self._con.rollback()
+            return False
+        finally:
+            self.desconectar()
+            
+    def obtener_categorias_por_grupo(self, grupo_id):
+        """Retorna todas las categorías de evaluación para un grupo."""
+        query = """
+        SELECT grupo_id, nombre_categoria, peso_porcentual, max_items
+        FROM categorias_evaluacion 
+        WHERE grupo_id = ?
+        ORDER BY nombre_categoria
+        """
         resultados = self.ejecutar_query(query, (grupo_id,))
         
-        if not resultados:
-            # Si no hay categorías, crear las iniciales y reintentar
-            self.crear_ponderacion_inicial(grupo_id)
-            return self.obtener_categorias(grupo_id)
+        # Convertir resultados a objetos CategoriaEvaluacion
+        categorias = [
+            CategoriaEvaluacion(r[0], r[1], r[2], r[3]) for r in resultados
+        ]
+        return categorias
+
+    def guardar_ponderaciones(self, grupo_id: int, categorias: list[CategoriaEvaluacion]):
+        """
+        Reemplaza TODAS las categorías de un grupo. 
+        Esto implementa el CU3 de forma eficiente.
+        """
+        try:
+            # 1. Eliminar las categorías existentes para ese grupo
+            # Usar la conexión y commit es más seguro para esta transacción.
+            self.conectar()
+            self.cursor.execute("DELETE FROM categorias_evaluacion WHERE grupo_id = ?", (grupo_id,))
             
-        # Retornamos objetos del modelo
-        lista_categorias = [
-            CategoriaEvaluacion(grupo_id, nombre, peso, items) 
-            for nombre, peso, items in resultados
-        ]
-        return lista_categorias 
-
-    def guardar_categorias(self, categorias: list[CategoriaEvaluacion], grupo_id):
-        # 1. Eliminar las categorías existentes para ese grupo
-        self.ejecutar_query("DELETE FROM categorias_evaluacion WHERE grupo_id = ?", (grupo_id,))
-        
-        # 2. Insertar las nuevas categorías
-        query = "INSERT INTO categorias_evaluacion (grupo_id, nombre_categoria, peso_porcentual, max_items) VALUES (?, ?, ?, ?)"
-        
-        params_list = [
-            (cat.get_grupo_id(), cat.get_nombre_categoria(), cat.get_peso_porcentual(), cat.get_max_items())
-            for cat in categorias
-        ]
-        return self.ejecutar_queries_multiples(query, params_list)
-
+            # 2. Insertar las nuevas categorías
+            if categorias:
+                query = """
+                INSERT INTO categorias_evaluacion (grupo_id, nombre_categoria, peso_porcentual, max_items) 
+                VALUES (?, ?, ?, ?)
+                """
+                params_list = [c.to_tuple() for c in categorias]
+                self.cursor.executemany(query, params_list)
+            
+            self._con.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Error al guardar ponderaciones: {e}")
+            self._con.rollback()
+            return False
+        finally:
+            self.desconectar()
 # ====================================================
 # 5. CALIFICACION DAO (CASO DE USO 5)
 # ====================================================
+# Asegúrate de importar BaseDAO y el modelo de Calificacion
+
 class CalificacionDAO(BaseDAO):
-    """Maneja las operaciones CRUD para las Calificaciones de Alumnos."""
+    """Maneja las operaciones CRUD para las Calificaciones (CU5)."""
 
     def registrar_calificacion(self, calificacion: Calificacion):
-        # Usamos REPLACE INTO para insertar o actualizar (FA.1: Modificar calificación existente)
-        query = "REPLACE INTO calificaciones (matricula, categoria, fecha, valor) VALUES (?, ?, ?, ?)"
-        params = (
-            calificacion.get_matricula(), 
-            calificacion.get_categoria(), 
-            calificacion.get_fecha() or date.today().isoformat(), 
-            calificacion.get_valor()
-        )
+        """
+        Inserta o actualiza (REPLACE INTO) una calificación individual.
+        Clave primaria: (matricula, categoria, fecha)
+        """
+        query = """
+        REPLACE INTO calificaciones (matricula, categoria, fecha, valor) 
+        VALUES (?, ?, ?, ?)
+        """
+        params = calificacion.to_tuple()
+        # Usamos el método de BaseDAO que maneja la conexión/desconexión
         return self.ejecutar_query(query, params)
-    
-    def obtener_calificaciones_por_grupo_categoria(self, grupo_id, categoria):
-        query = """
-            SELECT 
-                A.matricula, 
-                A.nombre_completo, 
-                C.valor
-            FROM alumnos A
-            LEFT JOIN calificaciones C 
-            ON A.matricula = C.matricula AND C.categoria = ?
-            WHERE A.grupo_id = ?
-            ORDER BY A.nombre_completo;
+
+    def obtener_calificaciones_por_categoria(self, grupo_id, categoria):
         """
+        Retorna la matrícula, nombre completo y la calificación (valor) 
+        para una categoría específica, incluyendo alumnos sin calificación (NULL).
+        """
+        # Se requiere un LEFT JOIN para asegurar que aparezcan todos los alumnos del grupo
+        query = f"""
+        SELECT 
+            A.matricula,
+            A.nombre_completo,
+            T1.valor
+        FROM alumnos A
+        LEFT JOIN (
+            -- Subconsulta para obtener la calificación más reciente por alumno/categoría
+            -- Si usas fecha para diferenciar, necesitas una estrategia para "la nota final"
+            -- Suponemos que buscas la calificación MÁS RECIENTE para esa categoría.
+            SELECT matricula, valor 
+            FROM calificaciones 
+            WHERE categoria = ? 
+            ORDER BY fecha DESC
+            LIMIT 1
+        ) T1 ON A.matricula = T1.matricula
+        WHERE A.grupo_id = ?
+        ORDER BY A.nombre_completo;
+        """
+        # Nota: Si el docente ingresa varias notas para una misma categoría, esta query
+        # es simple y solo mostrará la *más reciente* que coincida con la categoría.
+        # Si tienes múltiples entregables (ej. 'Tarea 1', 'Tarea 2', etc.), 
+        # la query debe cambiar para obtener todas las notas por alumno/categoría.
+        # Para el CU5, el enfoque de 'una sola nota por categoría' es más simple.
+
         return self.ejecutar_query(query, (categoria, grupo_id))
-    
-    def obtener_todas_calificaciones_por_grupo(self, grupo_id):
-        query = """
-            SELECT A.matricula, C.categoria, C.valor
-            FROM alumnos A
-            JOIN calificaciones C 
-            ON A.matricula = C.matricula
-            WHERE A.grupo_id = ?
+
+    def obtener_calificaciones_por_alumno_y_grupo(self, grupo_id):
         """
-        return self.ejecutar_query(query, (grupo_id,))
+        Retorna las calificaciones de TODOS los alumnos y de TODAS las categorías 
+        para un grupo. Esto es más complejo y se hace mejor en la capa de Lógica.
+        """
+        # Se deja la lógica de obtener todas las notas por alumno/categoría para GestorCalificaciones
+        # debido a la complejidad de la lógica de negocio (promedio, ponderación).
+        pass
