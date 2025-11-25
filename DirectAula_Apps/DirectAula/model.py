@@ -1,5 +1,6 @@
 
 # model.py
+from datetime import date
 class Alumno:
     """Representa un estudiante dentro de un grupo."""
     
@@ -72,30 +73,52 @@ class Grupo:
         return self._ciclo_escolar
 
 class CategoriaEvaluacion:
-    """Representa una categoría de evaluación (ponderación) flexible para un grupo."""
-    
+    """Representa una categoría de evaluación (ponderación) dentro de un grupo."""
     def __init__(self, grupo_id, nombre_categoria, peso_porcentual, max_items=1):
         self._grupo_id = grupo_id
-        self._nombre_categoria = nombre_categoria # Ej: "Proyecto Final", "Cuestionario 1", "Tareas"
-        self._peso_porcentual = peso_porcentual
-        self._max_items = max_items # Útil para tareas/participaciones (Total de Tareas)
+        self._nombre_categoria = nombre_categoria
+        self._peso_porcentual = peso_porcentual  # Ej: 30.0 (30%)
+        self._max_items = max_items  # BR.9 (No visible pero importante si lo implementas)
 
-    def get_grupo_id(self): return self._grupo_id
-    def get_nombre_categoria(self): return self._nombre_categoria
-    def get_peso_porcentual(self): return self._peso_porcentual
-    def get_max_items(self): return self._max_items
+    # Getters (para el DAO)
+    def get_grupo_id(self):
+        return self._grupo_id
 
+    def get_nombre_categoria(self):
+        return self._nombre_categoria
+
+    def get_peso_porcentual(self):
+        return self._peso_porcentual
+
+    def get_max_items(self):
+        return self._max_items
+
+    # Setters (para modificaciones en la UI)
+    def set_peso_porcentual(self, peso):
+        self._peso_porcentual = peso
 
 class Calificacion:
-    """Representa la nota específica de un alumno en una categoría (CU5)."""
-    
+    """Representa una calificación individual de un alumno en una categoría en una fecha."""
     def __init__(self, matricula, categoria, valor, fecha=None):
         self._matricula = matricula
-        self._categoria = categoria # Ej: 'Examen', 'Tarea_1', 'Participacion'
+        self._categoria = categoria
         self._valor = valor
-        self._fecha = fecha 
+        # Si no se proporciona fecha, usa la de hoy (ISO 8601: YYYY-MM-DD)
+        self._fecha = fecha if fecha is not None else date.today().isoformat()
 
-    def get_matricula(self): return self._matricula
-    def get_categoria(self): return self._categoria
-    def get_valor(self): return self._valor
-    def get_fecha(self): return self._fecha
+    # Getters
+    def get_matricula(self):
+        return self._matricula
+
+    def get_categoria(self):
+        return self._categoria
+
+    def get_valor(self):
+        return self._valor
+
+    def get_fecha(self):
+        return self._fecha
+
+    # Métodos para tuplas de BD
+    def to_tuple(self):
+        return (self._matricula, self._categoria, self._fecha, self._valor)
