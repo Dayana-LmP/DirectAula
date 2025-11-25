@@ -16,7 +16,7 @@ class VentanaCalificacionFinal(QDialog):
         self._grupo_id = grupo_id
         self._nombre_grupo = nombre_grupo
         
-        self.setWindowTitle(f"Calificación Final - {nombre_grupo} (CU6)")
+        self.setWindowTitle(f"Calificación Final - {nombre_grupo} ")
         # Tamaño recomendado para que quepan las 5 columnas
         self.setGeometry(100, 100, 850, 600) 
         
