@@ -355,3 +355,26 @@ class CalificacionDAO(BaseDAO):
         ORDER BY categoria, fecha DESC;
         """
         return self.ejecutar_query(query, (matricula,))
+
+# Datos/dao.py (Agregar al final del archivo)
+
+# ====================================================
+# 6. PROFESOR DAO (Autenticación)
+# ====================================================
+class ProfesorDAO(BaseDAO):
+    """Maneja las operaciones CRUD para la entidad Profesor."""
+    
+    def crear_profesor(self, nombre, usuario, password, email=""):
+        """Inserta un nuevo registro de profesor."""
+        query = "INSERT INTO profesores (nombre_completo, usuario, password, email) VALUES (?, ?, ?, ?)"
+        params = (nombre, usuario, password, email)
+        # ejecutar_query retorna True/False para INSERTs
+        return self.ejecutar_query(query, params)
+    
+    def buscar_profesor_por_usuario(self, usuario):
+        """Busca un profesor por su nombre de usuario."""
+        query = "SELECT profesor_id, nombre_completo, password, email FROM profesores WHERE usuario = ?"
+        resultado = self.ejecutar_query(query, (usuario,))
+        # ejecutar_query retorna una lista de tuplas (fetchall),
+        # por lo que tomamos el primer elemento si existe.
+        return resultado[0] if resultado else None

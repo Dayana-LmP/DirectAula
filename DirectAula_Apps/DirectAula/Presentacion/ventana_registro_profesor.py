@@ -1,7 +1,10 @@
-# Presentacion/ventana_registro_profesor.py
+# ventana_registro_profesor.py
 
+from email.mime import application
+import sys
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QLineEdit, QPushButton, QLabel, QMessageBox, QFrame
+    QDialog, QWidget, QVBoxLayout, QLineEdit, 
+    QPushButton, QLabel, QMessageBox, QFrame, QHBoxLayout
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -10,159 +13,158 @@ from Logica.gestor_autenticacion import GestorAutenticacion
 class VentanaRegistroProfesor(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setWindowTitle("DirectAula - Registro de Profesor")
+        self.setFixedSize(400, 550)
+        
         self.gestor = GestorAutenticacion()
-        self.setWindowTitle("DirectAula - Registrar Docente")
-        self.setFixedSize(450, 600)
+        self._usuario_registrado = "" # Almacena el nombre de usuario creado
+        
         self._inicializar_ui()
-    
+        
     def _inicializar_ui(self):
-        # Mismo fondo que Login
+        # Estilos de la ventana de registro
         self.setStyleSheet("""
-            VentanaRegistroProfesor {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                    stop:0 #FF6B35, 
-                    stop:0.5 #FF8E53, 
-                    stop:1 #F7931E);
+            QDialog {
+                background-color: #F7FAFC; /* Gris muy claro */
+            }
+            QFrame {
+                background-color: white;
+                border-radius: 15px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+            QLineEdit {
+                border: 1px solid #CBD5E0;
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #3182CE; /* Azul */
+            }
+            QPushButton#btnGuardar {
+                background-color: #3182CE;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+                height: 45px;
+            }
+            QPushButton#btnGuardar:hover {
+                background-color: #2C5282;
             }
         """)
         
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignCenter)
-        main_layout.setContentsMargins(30, 30, 30, 30)
         
-        # Frame principal
         main_frame = QFrame()
-        main_frame.setFixedSize(380, 520)
-        main_frame.setStyleSheet("""
-            QFrame {
-                background-color: rgba(255, 255, 255, 0.95);
-                border-radius: 15px;
-                border: 1px solid rgba(255, 255, 255, 0.3);
-            }
-        """)
-        
+        main_frame.setFixedSize(350, 500)
         frame_layout = QVBoxLayout(main_frame)
         frame_layout.setAlignment(Qt.AlignTop)
+        frame_layout.setSpacing(15)
         frame_layout.setContentsMargins(30, 30, 30, 30)
         
         # Título
-        lbl_titulo = QLabel("Registro de Docente")
+        lbl_titulo = QLabel("Nuevo Profesor")
         lbl_titulo.setAlignment(Qt.AlignCenter)
-        lbl_titulo.setFont(QFont("Segoe UI", 18, QFont.Bold))
-        lbl_titulo.setStyleSheet("color: #FF6B35;")
+        lbl_titulo.setFont(QFont("Arial", 16, QFont.Bold))
+        lbl_titulo.setStyleSheet("color: #2D3748; margin-bottom: 20px;")
         frame_layout.addWidget(lbl_titulo)
-        frame_layout.addSpacing(20)
-        
-        # --- Formulario de Registro ---
-        form_layout = QVBoxLayout()
-        form_layout.setSpacing(15)
-        
-        # Estilos de etiquetas y campos (simplificados para no repetir tanto)
-        input_style = """
-            QLineEdit {padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; background-color: white; font-size: 14px; color: #2d3748;}
-            QLineEdit:focus {border-color: #FF6B35;}
-        """
-        label_style = "color: #2d3748; font-weight: bold; font-size: 12px; margin-bottom: 2px;"
-        
-        # 1. Nombre Completo
-        lbl_nombre = QLabel("Nombre Completo:")
-        lbl_nombre.setStyleSheet(label_style)
+
+        # Campos de formulario
         self.campo_nombre = QLineEdit()
-        self.campo_nombre.setPlaceholderText("Ej. Juan Pérez")
+        self.campo_nombre.setPlaceholderText("Nombre Completo")
         self.campo_nombre.setFixedHeight(40)
-        self.campo_nombre.setStyleSheet(input_style)
-        form_layout.addWidget(lbl_nombre)
-        form_layout.addWidget(self.campo_nombre)
+        frame_layout.addWidget(self.campo_nombre)
         
-        # 2. Usuario
-        lbl_usuario = QLabel("Usuario Único:")
-        lbl_usuario.setStyleSheet(label_style)
+        self.campo_email = QLineEdit()
+        self.campo_email.setPlaceholderText("Correo Electrónico (Opcional)")
+        self.campo_email.setFixedHeight(40)
+        frame_layout.addWidget(self.campo_email)
+
         self.campo_usuario = QLineEdit()
-        self.campo_usuario.setPlaceholderText("Ej. jperez")
+        self.campo_usuario.setPlaceholderText("Nombre de Usuario (Único)")
         self.campo_usuario.setFixedHeight(40)
-        self.campo_usuario.setStyleSheet(input_style)
-        form_layout.addWidget(lbl_usuario)
-        form_layout.addWidget(self.campo_usuario)
-        
-        # 3. Contraseña
-        lbl_password = QLabel("Contraseña:")
-        lbl_password.setStyleSheet(label_style)
+        frame_layout.addWidget(self.campo_usuario)
+
         self.campo_password = QLineEdit()
-        self.campo_password.setPlaceholderText("Mínimo 6 caracteres")
+        self.campo_password.setPlaceholderText("Contraseña")
         self.campo_password.setEchoMode(QLineEdit.Password)
         self.campo_password.setFixedHeight(40)
-        self.campo_password.setStyleSheet(input_style)
-        form_layout.addWidget(lbl_password)
-        form_layout.addWidget(self.campo_password)
-        
-        # 4. Email (Opcional)
-        lbl_email = QLabel("Email (Opcional):")
-        lbl_email.setStyleSheet(label_style)
-        self.campo_email = QLineEdit()
-        self.campo_email.setPlaceholderText("Ej. correo@dominio.com")
-        self.campo_email.setFixedHeight(40)
-        self.campo_email.setStyleSheet(input_style)
-        form_layout.addWidget(lbl_email)
-        form_layout.addWidget(self.campo_email)
+        frame_layout.addWidget(self.campo_password)
 
-        frame_layout.addLayout(form_layout)
-        frame_layout.addSpacing(25)
+        self.campo_confirmar_password = QLineEdit()
+        self.campo_confirmar_password.setPlaceholderText("Confirmar Contraseña")
+        self.campo_confirmar_password.setEchoMode(QLineEdit.Password)
+        self.campo_confirmar_password.setFixedHeight(40)
+        frame_layout.addWidget(self.campo_confirmar_password)
+
+        frame_layout.addStretch(1)
+
+        # Botón Guardar
+        btn_guardar = QPushButton("Registrar Profesor")
+        btn_guardar.setObjectName("btnGuardar")
+        btn_guardar.clicked.connect(self._registrar_profesor)
+        frame_layout.addWidget(btn_guardar)
         
-        # Botón de Registro (Color azul diferente para diferenciar)
-        btn_registro = QPushButton("Registrarme")
-        btn_registro.setFixedHeight(45)
-        btn_registro.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4299E1, stop:1 #63B3ED);
-                color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: bold;
-            }
-            QPushButton:hover {background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #3182CE, stop:1 #4299E1);}
-        """)
-        btn_registro.clicked.connect(self._registrar_profesor)
-        frame_layout.addWidget(btn_registro)
-        
-        # Botón para volver al login
-        btn_volver = QPushButton("Volver a Iniciar Sesión")
-        btn_volver.setStyleSheet("border: none; color: #4299E1; font-size: 12px;")
-        btn_volver.clicked.connect(self.close)
-        frame_layout.addWidget(btn_volver)
+        # Botón Cancelar
+        btn_cancelar = QPushButton("Cancelar")
+        btn_cancelar.setStyleSheet("border: none; color: #718096; font-size: 13px; margin-top: 5px;")
+        btn_cancelar.clicked.connect(self.reject)
+        frame_layout.addWidget(btn_cancelar)
 
         main_layout.addWidget(main_frame)
         
-        # Conectar eventos
-        self.campo_email.returnPressed.connect(btn_registro.click)
+        # Conectar eventos de teclado
+        self.campo_confirmar_password.returnPressed.connect(btn_guardar.click)
+
 
     def _registrar_profesor(self):
+        """Intenta registrar un nuevo profesor en la base de datos."""
         nombre = self.campo_nombre.text().strip()
-        usuario = self.campo_usuario.text().strip()
-        password = self.campo_password.text().strip()
         email = self.campo_email.text().strip()
+        usuario = self.campo_usuario.text().strip()
+        password = self.campo_password.text()
+        confirm_password = self.campo_confirmar_password.text()
         
-        if not nombre or not usuario or not password:
-            QMessageBox.warning(self, "Campos Vacíos", "Por favor, complete Nombre, Usuario y Contraseña.")
+        # 1. Validación de campos obligatorios
+        if not nombre or not usuario or not password or not confirm_password:
+            QMessageBox.warning(self, "Error de Validación", "Todos los campos con (*) son obligatorios.")
             return
 
-        if len(password) < 6:
-            QMessageBox.warning(self, "Contraseña Insegura", "La contraseña debe tener al menos 6 caracteres.")
+        # 2. Validación de contraseñas
+        if password != confirm_password:
+            QMessageBox.warning(self, "Error de Contraseña", "Las contraseñas no coinciden.")
+            self.campo_password.setText("")
+            self.campo_confirmar_password.setText("")
             self.campo_password.setFocus()
             return
 
-        self.setEnabled(False)
+        # 3. Intentar el registro
+        resultado = self.gestor.registrar_profesor(nombre, usuario, password, email)
         
-        try:
-            resultado = self.gestor.registrar_profesor(nombre, usuario, password, email)
-            
-            if resultado["exito"]:
-                QMessageBox.information(self, "Registro Exitoso", resultado["mensaje"])
-                # Devuelve el estado "Aceptado" para que la ventana de login sepa que fue exitoso
-                self.accept() 
-            else:
-                QMessageBox.critical(self, "Error de Registro", resultado["mensaje"])
-                self.campo_usuario.selectAll()
-                self.campo_usuario.setFocus()
-                
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Ocurrió un error inesperado: {str(e)}")
-            
-        finally:
-            self.setEnabled(True)
+        if resultado:
+            # Si el registro fue exitoso:
+            self._usuario_registrado = usuario
+            QMessageBox.information(self, "Registro Exitoso", f"Profesor '{nombre}' registrado. Ahora puedes iniciar sesión.")
+            # Indica a la ventana padre que la operación fue aceptada (QDialog.Accepted)
+            self.accept() 
+        else:
+            QMessageBox.critical(self, "Error de Registro", "El nombre de usuario ya existe o hubo un error en la base de datos.")
+            self.campo_usuario.selectAll()
+            self.campo_usuario.setFocus()
+
+    def get_usuario_registrado(self):
+        """Método público para retornar el usuario registrado."""
+        return self._usuario_registrado
+
+if __name__ == "__main__":
+    app = application([])
+    # Ejemplo de uso (no debería ejecutarse directamente en el flujo principal)
+    ventana = VentanaRegistroProfesor()
+    if ventana.exec_() == QDialog.Accepted:
+        print(f"Usuario creado: {ventana.get_usuario_registrado()}")
+    else:
+        print("Registro cancelado.")
+    sys.exit(0)

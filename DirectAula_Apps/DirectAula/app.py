@@ -11,6 +11,9 @@ from Presentacion.ventana_alumnos import VentanaAlumnos
 from Presentacion.ventana_asistencia import VentanaAsistencia
 from Presentacion.seleccion_grupo import SeleccionGrupo
 
+# 💡 1. IMPORTAR LA VENTANA DE LOGIN
+from Presentacion.ventana_login import VentanaLogin 
+
 class VentanaMenuPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -91,10 +94,8 @@ if __name__ == '__main__':
     QApplication.setStyle(QStyleFactory.create('Fusion')) 
     app = QApplication(sys.argv)
     
-    # 💡 CÓDIGO CORREGIDO PARA ENCONTRAR style.css SIEMPRE:
-    # 1. Obtiene la ruta del archivo actual (app.py)
+    # 💡 CÓDIGO PARA CARGAR style.css (Tu código original)
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
-    # 2. Construye la ruta completa al archivo CSS
     ruta_css = os.path.join(directorio_actual, 'style.css')
     
     try:
@@ -104,6 +105,12 @@ if __name__ == '__main__':
     except FileNotFoundError:
         print(f"Advertencia: El archivo style.css no fue encontrado en la ruta: {ruta_css}")
         
-    ventana_principal = VentanaMenuPrincipal()
-    ventana_principal.show()
+    # 💡 2. REEMPLAZAMOS LA VENTANA PRINCIPAL POR LA VENTANA DE LOGIN
+    ventana_login = VentanaLogin()
+    ventana_login.show()
+    
+    # 🗑️ Borra o comenta estas dos líneas de tu código original:
+    # ventana_principal = VentanaMenuPrincipal()
+    # ventana_principal.show()
+
     sys.exit(app.exec_())
