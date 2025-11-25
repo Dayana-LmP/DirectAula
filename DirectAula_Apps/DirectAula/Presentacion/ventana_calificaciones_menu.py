@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageB
 from PyQt5.QtCore import Qt
 from Presentacion.ventana_ponderacion import VentanaPonderacion 
 from Presentacion.ventana_registro_calificaciones import VentanaRegistroCalificaciones 
+from Presentacion.ventana_calificacion_final import VentanaCalificacionFinal
+
 class VentanaCalificacionesMenu(QWidget):
     def __init__(self, grupo_id, nombre_grupo, parent=None):
         super().__init__(parent)
@@ -32,6 +34,12 @@ class VentanaCalificacionesMenu(QWidget):
         btn_registro.setObjectName("btn_agregar")
         btn_registro.clicked.connect(self.abrir_registro)
         layout.addWidget(btn_registro)
+
+        # CU6: Ver Calificación Final Ponderada y Estado de Riesgo
+        btn_final = QPushButton("3. Calificación Final y Estado de Riesgo")
+        btn_final.setObjectName("btn_agregar")
+        btn_final.clicked.connect(self.abrir_calificacion_final)
+        layout.addWidget(btn_final)
         
     def abrir_ponderacion(self):
         self.ventana_ponderacion = VentanaPonderacion(self._grupo_id, self._nombre_grupo)
@@ -40,3 +48,8 @@ class VentanaCalificacionesMenu(QWidget):
     def abrir_registro(self):
         self.ventana_registro = VentanaRegistroCalificaciones(self._grupo_id, self._nombre_grupo)
         self.ventana_registro.show()
+    
+    def abrir_calificacion_final(self):
+        # 🟢 Pasamos el ID del grupo y el nombre al constructor de la nueva ventana
+        self.ventana_final = VentanaCalificacionFinal(self._grupo_id, self._nombre_grupo, self)
+        self.ventana_final.exec_()
