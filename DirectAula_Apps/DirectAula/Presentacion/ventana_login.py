@@ -122,7 +122,7 @@ class VentanaLogin(QWidget):
         frame_layout.addSpacing(10)
 
         # Botón de registro
-        btn_registro = QPushButton("¿Eres nuevo? Regístrate aquí")
+        btn_registro = QPushButton("Crear cuenta de Profesor")
         btn_registro.setStyleSheet("border: none; color: #4299E1; font-size: 13px; padding: 5px;")
         btn_registro.clicked.connect(self._abrir_registro)
         frame_layout.addWidget(btn_registro)
@@ -131,7 +131,7 @@ class VentanaLogin(QWidget):
         frame_layout.addItem(QSpacerItem(20, 10, QSizePolicy.Minimum, QSizePolicy.Expanding))
 
         # Texto informativo (demo)
-        lbl_info = QLabel("Usuario demo: admin | Contraseña: admin123")
+        lbl_info = QLabel("")
         lbl_info.setAlignment(Qt.AlignCenter)
         lbl_info.setStyleSheet("""
             QLabel {
