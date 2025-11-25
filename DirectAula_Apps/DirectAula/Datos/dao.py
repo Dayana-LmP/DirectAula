@@ -1,4 +1,3 @@
-
 from datetime import date
 import sqlite3
 # Asegúrate que las tres entidades del modelo estén importadas
@@ -96,6 +95,9 @@ class BaseDAO:
             # 💡 Esto es útil para el debugging de errores SQL.
             print(f"Error al ejecutar consulta: {e}") 
             return False
+        finally:
+            self._desconectar()
+            
     def ejecutar_queries_multiples(self, query: str, params_list: list[tuple]):
         """Ejecuta una sola query varias veces con diferentes parámetros en una transacción."""
         try:
@@ -188,6 +190,7 @@ class AsistenciaDAO(BaseDAO):
         query = "REPLACE INTO asistencia (matricula, fecha, estado) VALUES (?, ?, ?)"
         params = (matricula, fecha, estado)
         return self.ejecutar_query(query, params)
+        
     def obtener_asistencia_del_dia(self, fecha, grupo_id):
         """
         Retorna la lista de todos los alumnos de un grupo junto con su estado de
@@ -230,7 +233,8 @@ class CategoriaEvaluacionDAO(BaseDAO):
         Si ya existen, no hace nada.
         """
         try:
-            self.conectar()
+            # ✅ CORRECCIÓN: Usar _conectar()
+            self._conectar() 
             
             # 1. Verificar si ya existen categorías para el grupo
             query_check = "SELECT COUNT(*) FROM categorias_evaluacion WHERE grupo_id = ?"
@@ -239,7 +243,6 @@ class CategoriaEvaluacionDAO(BaseDAO):
 
             if count == 0:
                 # 2. Si no existen, insertar ponderación por defecto
-                # Esto cumple con el requisito de tener una ponderación definida (BR.5 y CU3)
                 default_categories = [
                     (grupo_id, 'Examen', 50.0, 1),
                     (grupo_id, 'Tareas', 30.0, 1),
@@ -258,7 +261,8 @@ class CategoriaEvaluacionDAO(BaseDAO):
             self._con.rollback()
             return False
         finally:
-            self.desconectar()
+            # ✅ CORRECCIÓN: Usar _desconectar()
+            self._desconectar()
             
     def obtener_categorias_por_grupo(self, grupo_id):
         """Retorna todas las categorías de evaluación para un grupo."""
@@ -284,7 +288,8 @@ class CategoriaEvaluacionDAO(BaseDAO):
         try:
             # 1. Eliminar las categorías existentes para ese grupo
             # Usar la conexión y commit es más seguro para esta transacción.
-            self.conectar()
+            # ✅ CORRECCIÓN: Usar _conectar()
+            self._conectar()
             self.cursor.execute("DELETE FROM categorias_evaluacion WHERE grupo_id = ?", (grupo_id,))
             
             # 2. Insertar las nuevas categorías
@@ -303,11 +308,12 @@ class CategoriaEvaluacionDAO(BaseDAO):
             self._con.rollback()
             return False
         finally:
-            self.desconectar()
+            # ✅ CORRECCIÓN: Usar _desconectar()
+            self._desconectar()
+            
 # ====================================================
 # 5. CALIFICACION DAO (CASO DE USO 5)
 # ====================================================
-# Asegúrate de importar BaseDAO y el modelo de Calificacion
 
 class CalificacionDAO(BaseDAO):
     """Maneja las operaciones CRUD para las Calificaciones (CU5)."""
@@ -331,7 +337,7 @@ class CalificacionDAO(BaseDAO):
         para una categoría específica, incluyendo alumnos sin calificación (NULL).
         """
         # Se requiere un LEFT JOIN para asegurar que aparezcan todos los alumnos del grupo
-        query = f"""
+        query = """
         SELECT 
             A.matricula,
             A.nombre_completo,
@@ -339,8 +345,7 @@ class CalificacionDAO(BaseDAO):
         FROM alumnos A
         LEFT JOIN (
             -- Subconsulta para obtener la calificación más reciente por alumno/categoría
-            -- Si usas fecha para diferenciar, necesitas una estrategia para "la nota final"
-            -- Suponemos que buscas la calificación MÁS RECIENTE para esa categoría.
+            -- Usamos 'WHERE' y 'LIMIT 1' para el enfoque de 'una sola nota por categoría'
             SELECT matricula, valor 
             FROM calificaciones 
             WHERE categoria = ? 
@@ -350,11 +355,6 @@ class CalificacionDAO(BaseDAO):
         WHERE A.grupo_id = ?
         ORDER BY A.nombre_completo;
         """
-        # Nota: Si el docente ingresa varias notas para una misma categoría, esta query
-        # es simple y solo mostrará la *más reciente* que coincida con la categoría.
-        # Si tienes múltiples entregables (ej. 'Tarea 1', 'Tarea 2', etc.), 
-        # la query debe cambiar para obtener todas las notas por alumno/categoría.
-        # Para el CU5, el enfoque de 'una sola nota por categoría' es más simple.
 
         return self.ejecutar_query(query, (categoria, grupo_id))
 
@@ -366,3 +366,17 @@ class CalificacionDAO(BaseDAO):
         # Se deja la lógica de obtener todas las notas por alumno/categoría para GestorCalificaciones
         # debido a la complejidad de la lógica de negocio (promedio, ponderación).
         pass
+        
+    def obtener_calificaciones_por_alumno_y_categoria(self, matricula: str):
+        """
+        ✅ NUEVO MÉTODO: Retorna todas las notas registradas para un alumno, agrupadas por categoría.
+        Útil para calcular promedios de categoría y el promedio final ponderado (BR.14).
+        """
+        query = """
+        SELECT categoria, valor, fecha
+        FROM calificaciones 
+        WHERE matricula = ?
+        ORDER BY categoria, fecha DESC;
+        """
+        # Usamos ejecutar_query de BaseDAO para manejar la conexión/desconexión
+        return self.ejecutar_query(query, (matricula,))
