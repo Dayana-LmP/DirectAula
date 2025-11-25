@@ -60,6 +60,16 @@ class BaseDAO:
                 FOREIGN KEY (matricula) REFERENCES alumnos(matricula) ON DELETE CASCADE
             );
         """)
+
+        self.ejecutar_query("""
+            CREATE TABLE IF NOT EXISTS profesores (
+    profesor_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre_completo TEXT NOT NULL,
+    usuario TEXT UNIQUE NOT NULL, -- El usuario debe ser único
+    password TEXT NOT NULL,
+    email TEXT
+            );
+        """)
         
     def _conectar(self):
         self._con = sqlite3.connect(self._db_file)
