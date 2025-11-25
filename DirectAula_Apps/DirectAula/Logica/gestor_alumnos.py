@@ -3,7 +3,7 @@ from model import Alumno, Asistencia, Grupo, CategoriaEvaluacion, Calificacion
 from datetime import date 
 
 # ====================================================
-# 1. GESTOR GRUPOS (CU-1)
+# 1. GESTOR GRUPOS (CU-1) - Sin cambios
 # ====================================================
 
 class GestorGrupos:
@@ -63,7 +63,7 @@ class GestorGrupos:
             return "Error: No se pudo eliminar el grupo."
 
 # ====================================================
-# 2. GESTOR ALUMNOS (CU-2)
+# 2. GESTOR ALUMNOS (CU-2) - Sin cambios
 # ====================================================
 class GestorAlumnos:
     """Gestiona el flujo y aplica las reglas de negocio para Alumnos."""
@@ -122,7 +122,7 @@ class GestorAlumnos:
             return "Error: No se pudo eliminar el alumno."
 
 # ====================================================
-# 3. GESTOR ASISTENCIA (CU-4)
+# 3. GESTOR ASISTENCIA (CU-4) - Sin cambios relevantes
 # ====================================================
 class GestorAsistencia:
     """Gestiona el flujo de registro de asistencia."""
@@ -168,14 +168,16 @@ class GestorAsistencia:
         return self._asistencia_dao.obtener_asistencia_del_dia(fecha, self._grupo_actual_id)
 
 # ====================================================
-# 4. GESTOR CALIFICACIONES (CASO DE USO 3 y 5)
+# 4. GESTOR CALIFICACIONES (CASO DE USO 3, 5 y 6)
 # ====================================================
 class GestorCalificaciones:
     def __init__(self, grupo_id):
         self._grupo_actual_id = grupo_id
-        # Cambiamos PonderacionDAO por CategoriaEvaluacionDAO
         self._categoria_dao = CategoriaEvaluacionDAO() 
         self._calificacion_dao = CalificacionDAO()
+        # 💡 AGREGADOS para CU6: Promedio Final y Riesgo (BR.12)
+        self._alumno_dao = AlumnoDAO()
+        self._asistencia_dao = AsistenciaDAO()
         
         # Aseguramos la ponderación inicial (BR.3)
         self._categoria_dao.crear_ponderacion_inicial(grupo_id)
@@ -189,11 +191,14 @@ class GestorCalificaciones:
     def guardar_categorias_evaluacion(self, categorias_data: list[tuple]):
         """
         Recibe una lista de tuplas: [(nombre, peso, max_items), ...]
-        y valida que la suma sea 100%.
+        y valida que la suma sea 100%. (BR.10)
         """
-        total_peso = sum([float(peso) for _, peso, _ in categorias_data])
-        
-        # FE.1: Ponderación inconsistente
+        # Validar la suma de pesos (FE.1)
+        try:
+            total_peso = sum([float(peso) for _, peso, _ in categorias_data])
+        except (TypeError, ValueError):
+            return "Error: Los pesos porcentuales deben ser numéricos."
+            
         if round(total_peso) != 100:
             return f"Error: La suma de las ponderaciones debe ser 100%, la suma actual es {total_peso:.1f}%."
         
@@ -204,44 +209,122 @@ class GestorCalificaciones:
                 CategoriaEvaluacion(self._grupo_actual_id, nombre, float(peso), int(max_items))
             )
         
-        # Guardar en la base de datos
-        if self._categoria_dao.guardar_categorias(lista_modelos, self._grupo_actual_id):
-            # 6. Guarda la estructura y recalcula todos los promedios (BR.14)
-            self._recalcular_promedios() 
-            return "Estructura de evaluación guardada y promedios recalculados exitosamente."
-        else:
-            return "Error al intentar guardar la estructura de evaluación."
+        # Guardar en la base de datos (Usa el método corregido del DAO)
+        try:
+            # ✅ CORRECCIÓN: Llamada directa al método guardando el orden (lista_modelos, grupo_id)
+            if self._categoria_dao.guardar_ponderaciones(lista_modelos, self._grupo_actual_id):
+                # 6. Guarda la estructura y recalcula todos los promedios (BR.14)
+                self._recalcular_promedios()
+                return "Éxito: Estructura de evaluación guardada y promedios recalculados exitosamente."
+            else:
+                return "Error: El DAO retornó un fallo al guardar la estructura de evaluación."
+        except Exception as e:
+            # Este error puede ser por fallo de DB o fallo en el DAO que no se capturó
+            return f"Error crítico al intentar guardar ponderaciones: {e}"
 
-    # --- Lógica de Recálculo (La parte más afectada) ---
-    # *Este método se vuelve más complejo por la naturaleza dinámica*
+    # --- Lógica de Recálculo y Promedio (CU6) ---
+
     def _recalcular_promedios(self):
         """Calcula el promedio final de CADA alumno en el grupo usando la ponderación dinámica."""
-        
-        # 1. Obtener ponderación dinámica
+        alumnos_data = self._alumno_dao.obtener_alumnos_por_grupo(self._grupo_actual_id)
         categorias = self.obtener_categorias_evaluacion()
         
-        # Diccionario de categorías para acceso rápido: {nombre: (peso, max_items)}
-        diccionario_ponderacion = {
-            c.get_nombre_categoria(): (c.get_peso_porcentual(), c.get_max_items())
-            for c in categorias
-        }
-        
-        # 2. Obtener TODAS las calificaciones del grupo
-        # NOTA: Ahora las calificaciones deben tener nombres que coincidan EXACTAMENTE 
-        # con los nombres de las categorías guardadas (Ej. "Examen Final" vs "Examen").
-        # Por simplicidad, asumiremos que solo se registran notas de categorías definidas.
-        calificaciones = self._calificacion_dao.obtener_todas_calificaciones_por_grupo(self._grupo_actual_id)
-        
-        # ... (El resto de la lógica de recálculo aquí. Se iteraría sobre las calificaciones
-        # y se agruparía por la clave de la categoría definida en el diccionario_ponderacion.)
-        # ...
-        
-        print(f"Recalculando promedios para grupo {self._grupo_actual_id} con {len(categorias)} categorías.")
+        for matricula, _, _, _ in alumnos_data: 
+            # Recalcula el promedio de cada alumno. Aunque no lo guardemos, asegura la lógica.
+            self._calcular_promedio_alumno_ponderado(matricula, categorias) 
+            
+        print(f"Recalculo de promedios finalizado para grupo {self._grupo_actual_id}.")
         return True
+
+    def _calcular_promedio_alumno_ponderado(self, matricula, ponderaciones):
+        """Calcula el promedio ponderado de un alumno dado usando las ponderaciones actuales (BR.14)."""
+        # Obtener todas las calificaciones del alumno (categoría, valor, fecha)
+        calificaciones_alumno = self._calificacion_dao.obtener_calificaciones_por_alumno_y_categoria(matricula)
+        
+        # Reestructurar calificaciones por categoría para fácil acceso
+        notas_por_categoria = {}
+        for categoria, valor, _ in calificaciones_alumno:
+            if categoria not in notas_por_categoria:
+                notas_por_categoria[categoria] = []
+            notas_por_categoria[categoria].append(valor)
+
+        suma_ponderada = 0.0
+        peso_total_valido = 0.0
+        
+        for categoria in ponderaciones:
+            nombre_cat = categoria.get_nombre_categoria()
+            peso_cat = categoria.get_peso_porcentual()
+            max_items = categoria.get_max_items()
+            
+            notas_categoria = notas_por_categoria.get(nombre_cat)
+            
+            if notas_categoria:
+                # Tomar solo las mejores 'max_items' calificaciones
+                notas_categoria.sort(reverse=True)
+                notas_seleccionadas = notas_categoria[:max_items]
+                
+                # BR.14: Calcular promedio de la categoría
+                promedio_categoria = sum(notas_seleccionadas) / len(notas_seleccionadas)
+                
+                suma_ponderada += promedio_categoria * (peso_cat / 100.0)
+                peso_total_valido += peso_cat # Suma el peso solo si hay al menos una nota registrada en la categoría
+                
+        if peso_total_valido == 0:
+            return 0.0
+        
+        # Normalizar el promedio por la suma de los pesos que realmente se utilizaron (BR.14)
+        return suma_ponderada / (peso_total_valido / 100.0)
+        
+    def calcular_promedios_y_estado_final(self):
+        """
+        Calcula el promedio final ponderado (BR.14) y el estado de riesgo (BR.12)
+        para todos los alumnos del grupo (CU6).
+        Retorna: [(matricula, nombre, promedio, asistencia, estado_riesgo), ...]
+        """
+        alumnos = self._alumno_dao.obtener_alumnos_por_grupo(self._grupo_actual_id)
+        ponderaciones = self._categoria_dao.obtener_categorias_por_grupo(self._grupo_actual_id)
+        
+        resultados_finales = []
+        
+        for matricula, nombre, _, _ in alumnos:
+            # 1. Calcular promedio ponderado (BR.14)
+            promedio = self._calcular_promedio_alumno_ponderado(matricula, ponderaciones) 
+            
+            # 2. Obtener porcentaje de asistencia
+            porcentaje_asistencia = self._asistencia_dao.obtener_porcentaje_asistencia_por_alumno(matricula)
+            
+            # 3. Determinar estado de riesgo (BR.12) y redondear (BR.17)
+            # BR.17: Redondeo a 2 decimales
+            promedio_redondeado = round(promedio, 2)
+            porcentaje_asistencia_redondeado = round(porcentaje_asistencia, 2)
+            
+            estado_riesgo = "Normal"
+            
+            # BR.12: Riesgo Académico < 7.0
+            if promedio_redondeado < 7.0:
+                estado_riesgo = "Riesgo Académico"
+            
+            # BR.12: Riesgo Asistencia < 80.0
+            if porcentaje_asistencia_redondeado < 80.0:
+                if estado_riesgo == "Riesgo Académico":
+                    estado_riesgo = "Riesgo Académico y Asistencia"
+                else:
+                    estado_riesgo = "Riesgo Asistencia"
+                    
+            resultados_finales.append((
+                matricula, 
+                nombre, 
+                promedio_redondeado, 
+                porcentaje_asistencia_redondeado, 
+                estado_riesgo
+            ))
+            
+        return resultados_finales
 
     # --- CU5: Registro de Calificaciones ---
     
     def obtener_alumnos_con_calificaciones(self, categoria):
+        """Retorna alumnos con su calificación más reciente para una categoría."""
         # Retorna: [(matricula, nombre, valor), ...]
         return self._calificacion_dao.obtener_calificaciones_por_categoria(self._grupo_actual_id, categoria)
 
@@ -249,40 +332,30 @@ class GestorCalificaciones:
         # FE.1: Validación de rangos (BR.13)
         try:
             valor_num = float(valor)
-        except ValueError:
+        except (TypeError, ValueError):
             return "Error: La calificación debe ser un valor numérico."
-            
+        
         if not (0.0 <= valor_num <= 10.0):
-            return "Error (FE.1): La nota debe estar en la escala válida (0.0 a 10.0)."
-            
-        nueva_calificacion = Calificacion(
-            matricula=matricula, categoria=categoria, valor=valor_num,
-            fecha=date.today().isoformat() # Usamos la fecha actual como identificador de registro
-        )
-        
-        if self._calificacion_dao.registrar_calificacion(nueva_calificacion):
-            # 6. Calcula automáticamente el nuevo promedio final (BR.15)
-            self._recalcular_promedios() 
-            return "Calificación registrada y promedio actualizado."
-        else:
-            return "Error al intentar registrar la calificación."
+            return "Error: La calificación debe estar entre 0 y 10 (BR.13)."
 
-    # --- Lógica de Recálculo ---
-    
-    def _recalcular_promedios(self):
-        """Calcula el promedio final de CADA alumno en el grupo usando la ponderación actual."""
-        # NOTA: Por simplicidad, esta función no guarda el resultado final, 
-        # solo simula el cálculo que se ejecutaría. Para guardar, se necesita 
-        # una tabla o campo extra en el modelo Alumno.
-        print(f"Recalculando promedios para grupo {self._grupo_actual_id}...")
-        
-        # 1. Obtener ponderación
-        asist_p, examen_p, part_p, tareas_p, total_tareas = self._ponderacion_dao.obtener_ponderacion(self._grupo_actual_id)
-        
-        # 2. Obtener TODAS las calificaciones del grupo
-        calificaciones = self._calificacion_dao.obtener_todas_calificaciones_por_grupo(self._grupo_actual_id)
-        
-        # ... (El cálculo complejo real está aquí, pero por ahora solo simulamos) ...
-        # (El cálculo del promedio final es la parte más compleja de la lógica)
-        
-        return True
+        # Construir el modelo de calificación
+        nueva_calificacion = Calificacion(matricula, categoria, valor_num)
+
+        # ✅ CORRECCIÓN: Llamada directa al método único del DAO
+        try:
+            saved = self._calificacion_dao.registrar_calificacion(nueva_calificacion)
+        except Exception as e:
+            print(f"Error al registrar calificación: {e}")
+            saved = False
+
+        if saved:
+            # Recalcular promedios para actualizar estado de riesgo (BR.15)
+            try:
+                self._recalcular_promedios()
+            except Exception as e:
+                # Silenciar errores de recálculo para no bloquear el guardado, pero se loggea
+                print(f"Advertencia: Fallo en el recálculo de promedios post-guardado: {e}")
+                pass
+            return "Éxito: Calificación registrada."
+        else:
+            return "Error: No se pudo registrar la calificación."

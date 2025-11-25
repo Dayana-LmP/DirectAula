@@ -1,17 +1,19 @@
 # En Logica/gestor_calificaciones.py
 
-from Datos.dao import CategoriaEvaluacionDAO, CalificacionDAO, AlumnoDAO # Asegúrate de importar AlumnoDAO si está en dao.py
+from Datos.dao import AsistenciaDAO, CategoriaEvaluacionDAO, CalificacionDAO, AlumnoDAO # Asegúrate de importar AlumnoDAO si está en dao.py
 from model import Calificacion, CategoriaEvaluacion # Asegúrate de importar los modelos
 from datetime import date
 
 class GestorCalificaciones:
     """Gestiona el flujo de administración de categorías (CU3) y calificaciones (CU5)."""
 
-    def __init__(self, grupo_id):
+    def __init__(self, grupo_id :int):
         self._grupo_actual_id = grupo_id
-        self._categoria_dao = CategoriaEvaluacionDAO()
-        self._calificacion_dao = CalificacionDAO()
-        self._alumno_dao = AlumnoDAO() # Necesario para obtener alumnos y recalcular
+        self._calificacion_dao = CalificacionDAO() 
+        self._ponderacion_dao = CategoriaEvaluacionDAO() # 👈 ESTA LÍNEA FALTABA
+        self._alumno_dao = AlumnoDAO() # Necesario para obtener alumnos y sus matrículas
+        self._asistencia_dao = AsistenciaDAO()
+        self._ponderacion_dao.crear_ponderacion_inicial(grupo_id) # Asegura ponderación inicial
 
     # ===============================================
     # LÓGICA CU3: ADMINISTRAR PONDERACIONES
@@ -19,7 +21,7 @@ class GestorCalificaciones:
 
     def obtener_categorias(self):
         """Recupera la lista de categorías del grupo actual."""
-        return self._categoria_dao.obtener_categorias_por_grupo(self._grupo_actual_id)
+        return self._ponderacion_dao.obtener_categorias_por_grupo(self._grupo_actual_id)
 
     def guardar_ponderaciones(self, categorias: list[CategoriaEvaluacion]):
         """
