@@ -38,7 +38,7 @@ QHeaderView::section {
 
 /* Botón Agregar (Verde) */
 #btn_agregar {
-    background-color: #4CAF50; /* Verde */
+    background-color: #0C6930; /* Verde */
     color: white;
     border-radius: 5px;
     padding: 8px 15px;
@@ -46,12 +46,12 @@ QHeaderView::section {
     border: none;
 }
 #btn_agregar:hover {
-    background-color: #45a049;
+    background-color: #45AC39;
 }
 
 /* Botón Editar (Amarillo) */
 #btn_editar {
-    background-color: #ffc107; /* Amarillo */
+    background-color: #E3F122; /* Amarillo */
     color: #333333;
     border-radius: 5px;
     padding: 8px 15px;
@@ -59,12 +59,12 @@ QHeaderView::section {
     border: none;
 }
 #btn_editar:hover {
-    background-color: #e0a800;
+    background-color: #D3E10E;
 }
 
 /* Botón Eliminar (Rojo) */
 #btn_eliminar {
-    background-color: #f44336; /* Rojo */
+    background-color: #E40C0E; /* Rojo */
     color: white;
     border-radius: 5px;
     padding: 8px 15px;
@@ -72,12 +72,12 @@ QHeaderView::section {
     border: none;
 }
 #btn_eliminar:hover {
-    background-color: #da190b;
+    background-color: #C1312F;
 }
 
 /* Botón Exportar (Azul) */
 #btn_exportar {
-    background-color: #2196F3; /* Azul */
+    background-color: #4A36BA; /* Azul */
     color: white;
     border-radius: 5px;
     padding: 8px 15px;
@@ -85,12 +85,12 @@ QHeaderView::section {
     border: none;
 }
 #btn_exportar:hover {
-    background-color: #0b7dda;
+    background-color: #3664BA;
 }
 
 /* Estilo para los Títulos Principales */
 #titulo_principal {
-    color: #003366; /* Azul Oscuro */
+    color: #2A0E90; /* Azul Oscuro */
     font-size: 24px;
     font-weight: bold;
     padding-bottom: 10px;
@@ -98,7 +98,7 @@ QHeaderView::section {
 
 /* Estilo para los Subtítulos y Secciones */
 .subtitulo {
-    color: #003366; /* Azul Oscuro */
+    color: #2E0F9E; /* Azul Oscuro */
     font-size: 16px;
     font-weight: bold;
     margin-top: 15px; /* Espacio antes del subtítulo */
