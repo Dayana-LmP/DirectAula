@@ -184,7 +184,7 @@ class GestorCalificaciones:
     
     def obtener_categorias_evaluacion(self):
         """Obtiene la lista de objetos CategoriaEvaluacion para el grupo actual."""
-        return self._categoria_dao.obtener_categorias(self._grupo_actual_id)
+        return self._categoria_dao.obtener_categorias_por_grupo(self._grupo_actual_id)
         
     def guardar_categorias_evaluacion(self, categorias_data: list[tuple]):
         """
