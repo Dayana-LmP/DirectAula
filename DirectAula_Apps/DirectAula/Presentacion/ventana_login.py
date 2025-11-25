@@ -23,37 +23,92 @@ class VentanaLogin(QWidget):
     def _inicializar_ui(self):
         self.setWindowTitle("DirectAula - Iniciar Sesión")
         self.setFixedSize(450, 450) 
-        
-        # Estilo de fondo con degradado (adaptado de tu código)
         self.setStyleSheet("""
             VentanaLogin {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                    stop:0 #FF6B35, 
-                    stop:0.5 #FF8E53, 
-                    stop:1 #F7931E);
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #EAF6FF,
+                    stop:0.5 #F6FBFF,
+                    stop:1 #EAFBF2);
             }
             QLineEdit {
-                border: 1px solid #CBD5E0;
+                border: 1px solid #D6E9F8;
                 border-radius: 8px;
                 padding: 10px;
                 font-size: 14px;
+                background: ##FF9999;
+                color: #2B3A42;
             }
             QLineEdit:focus {
-                border: 2px solid #FF6B35;
+                border: 2px solid #7FB7FF;
+                background: #FFFFFF;
             }
             QPushButton {
-                background-color: #1A73E8; /* Azul primario */
+                background-color: #5AA6FF;
                 color: white;
                 border: none;
                 border-radius: 8px;
                 font-size: 16px;
                 font-weight: bold;
+                padding: 10px;
             }
             QPushButton:hover {
-                background-color: #1765c7;
+                background-color: #3C8EE6;
+            }
+            QPushButton:disabled {
+                background-color: #BFDFFF;
+                color: #7A8B96;
+            }
+            QLabel {
+                color: #334E5A;
             }
         """)
-        
+        # Estilo de fondo con degradado (adaptado de tu código)
+        self.setStyleSheet("""
+            VentanaLogin {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #DFF3FF,      /* azul pastel */
+                    stop:0.5 #E8FFF5,    /* verde pastel */
+                    stop:1 #FFE6E6);     /* rojo pastel suave */
+            }
+
+            QLineEdit {
+                border: 1px solid #BBD7E4;
+                border-radius: 8px;
+                padding: 10px;
+                font-size: 14px;
+                background: #F0F8FF;     /* azul muy suave */
+                color: #2B3A42;
+            }
+
+            QLineEdit:focus {
+                border: 2px solid #7FB7FF;
+                background: #FFFFFF;
+            }
+
+            QPushButton {
+                background-color: #7EC8E3;   /* azul claro suave */
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 10px;
+            }
+
+            QPushButton:hover {
+                background-color: #68B3D1;   /* azul suave más oscuro */
+            }
+
+            QPushButton:disabled {
+                background-color: #CFEAF5;
+                color: #7A8B96;
+            }
+
+            QLabel {
+                color: #334E5A;
+            }
+        """)
+
         main_layout = QVBoxLayout(self)
         main_layout.setAlignment(Qt.AlignCenter)
         main_layout.setSpacing(0)
