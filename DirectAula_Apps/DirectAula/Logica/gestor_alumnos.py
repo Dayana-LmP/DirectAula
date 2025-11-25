@@ -243,7 +243,7 @@ class GestorCalificaciones:
     
     def obtener_alumnos_con_calificaciones(self, categoria):
         # Retorna: [(matricula, nombre, valor), ...]
-        return self._calificacion_dao.obtener_calificaciones_por_grupo_categoria(self._grupo_actual_id, categoria)
+        return self._calificacion_dao.obtener_calificaciones_por_categoria(self._grupo_actual_id, categoria)
 
     def registrar_calificacion(self, matricula, categoria, valor):
         # FE.1: Validación de rangos (BR.13)
