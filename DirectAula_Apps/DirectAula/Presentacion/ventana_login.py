@@ -22,7 +22,7 @@ class VentanaLogin(QWidget):
 
     def _inicializar_ui(self):
         self.setWindowTitle("DirectAula - Iniciar Sesión")
-        self.setFixedSize(450, 550) 
+        self.setFixedSize(450, 450) 
         
         # Estilo de fondo con degradado (adaptado de tu código)
         self.setStyleSheet("""

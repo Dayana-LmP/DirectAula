@@ -18,7 +18,7 @@ class VentanaMenuPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("DirectAula - Sistema de Gestión")
-        self.resize(400, 300)
+        self.resize(450, 300)
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
