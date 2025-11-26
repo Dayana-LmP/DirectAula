@@ -1,0 +1,116 @@
+/* style.css */
+/* Estilo general de la aplicación */
+QWidget {
+    background-color: #f7f9fc;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+/* Encabezados y títulos */
+QLabel {
+    color: #333333;
+}
+
+/* Campo de Búsqueda (QLineEdit) */
+QLineEdit {
+    padding: 5px;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    background-color: white;
+    color: #000000;
+}
+
+QLineEdit:focus {
+    border: 2px solid #0C6930;
+}
+
+QLineEdit[placeholderText] {
+    color: #999999;
+}
+
+/* Tabla de Alumnos (QTableWidget) */
+QTableWidget {
+    background-color: white;
+    lighting-color: #dddddd;
+}
+
+QHeaderView::section {
+    background-color: #e0e6f0;
+    padding: 6px;
+    border: 1px solid #cccccc;
+    font-weight: bold;
+}
+
+/* Estilo general de BOTONES */
+QPushButton {
+    background-color: #4A36BA;
+    color: white;
+    border-radius: 5px;
+    padding: 6px 12px;
+    font-weight: bold;
+    border: none;
+    font-size: 12px;
+    min-height: 28px;
+}
+
+QPushButton:hover {
+    background-color: #3664BA;
+}
+
+QPushButton:pressed {
+    background-color: #26548A;
+}
+
+/* Botón Agregar (Verde) */
+#btn_agregar {
+    background-color: #0C6930;
+}
+
+#btn_agregar:hover {
+    background-color: #45AC39;
+}
+
+/* Botón Editar (Amarillo) */
+#btn_editar {
+    background-color: #E3F122;
+    color: #333333;
+}
+
+#btn_editar:hover {
+    background-color: #D3E10E;
+}
+
+/* Botón Eliminar (Rojo) */
+#btn_eliminar {
+    background-color: #E40C0E;
+    color: white;
+}
+
+#btn_eliminar:hover {
+    background-color: #C1312F;
+}
+
+/* Botón Exportar (Azul) */
+#btn_exportar {
+    background-color: #4A36BA;
+    color: white;
+}
+
+#btn_exportar:hover {
+    background-color: #3664BA;
+}
+
+/* Estilo para los Títulos Principales */
+#titulo_principal {
+    color: #2A0E90;
+    font-size: 24px;
+    font-weight: bold;
+    padding-bottom: 10px;
+}
+
+/* Estilo para los Subtítulos y Secciones */
+.subtitulo {
+    color: #2E0F9E;
+    font-size: 16px;
+    font-weight: bold;
+}
