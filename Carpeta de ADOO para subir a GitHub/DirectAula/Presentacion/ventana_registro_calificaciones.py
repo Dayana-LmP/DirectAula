@@ -1,0 +1,148 @@
+#Archivo para la ventana de registro de calificaciones.
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QTableWidget, QComboBox, 
+    QLabel, QPushButton, QMessageBox, QTableWidgetItem, QHeaderView
+)
+from PyQt5.QtCore import Qt
+from Logica.gestor_alumnos import GestorCalificaciones 
+#Clase para la ventana de registro de calificaciones.
+class VentanaRegistroCalificaciones(QWidget):
+  #Método constructor
+    def __init__(self, grupo_id, nombre_grupo, parent=None):
+        super().__init__(parent)
+        self._grupo_id = grupo_id
+        self._nombre_grupo = nombre_grupo
+        # Inicializa el gestor de calificaciones
+        self.gestor = GestorCalificaciones(grupo_id) 
+        self.setWindowTitle(f"Registro de calificaciones - {nombre_grupo}")
+        self.resize(800, 400)
+        
+        #Llama a _obtener_nombres_categorias antes de _inicializar_ui
+        self._categorias_activas = self._obtener_nombres_categorias() 
+        
+        self._inicializar_ui()
+   #Método para obtener los nombres de las categorías definidas 
+    def _obtener_nombres_categorias(self):
+        categorias = self.gestor.obtener_categorias_evaluacion()
+        nombres = [c.get_nombre_categoria() for c in categorias]
+        
+        #El gestor de calificaciones debe retornar los objetos actualizados con la ponderación definida por el maestro.
+        return nombres
+        #Método para inicializar la interfaz de usuario.
+    def _inicializar_ui(self):
+        main_layout = QVBoxLayout(self)
+        #Título principal
+        lbl_titulo = QLabel(f"Registrar calificaciones: {self._nombre_grupo}")
+        lbl_titulo.setObjectName("titulo_principal")
+        main_layout.addWidget(lbl_titulo)
+
+        #1. Selector de Categoría
+        selector_layout = QVBoxLayout()
+        lbl_categoria = QLabel("Seleccionar categoría:")
+        self.combo_categoria = QComboBox()
+        #Manejo de caso sin categorías definidas
+        if not self._categorias_activas:
+            self.combo_categoria.addItem("No hay categorías definidas")
+            QMessageBox.warning(self, "Advertencia", "No hay categorías de evaluación definidas para este grupo. Vaya a Administrar Ponderación (CU3).")
+            self.btn_guardar = QPushButton("Guardar") 
+            self.btn_guardar.setEnabled(False) 
+        else:
+            self.combo_categoria.addItems(self._categorias_activas)
+            self.combo_categoria.setCurrentText(self._categorias_activas[0])
+            self.btn_guardar = QPushButton("Guardar") 
+        
+        #Conexión: Al cambiar categoría, recargar la tabla de calificaciones
+        self.combo_categoria.currentIndexChanged.connect(self._cargar_datos)
+    
+        selector_layout.addWidget(lbl_categoria)
+        selector_layout.addWidget(self.combo_categoria)
+        main_layout.addLayout(selector_layout) 
+
+        #2. Tabla de Calificaciones
+        self.tabla_calificaciones = QTableWidget()
+        self.tabla_calificaciones.setColumnCount(3)
+        self.tabla_calificaciones.setHorizontalHeaderLabels(["Matrícula", "Nombre completo", "Calificación (0-10)"])
+        self.tabla_calificaciones.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        #Conexión principal: Al editar una celda, guardar automáticamente 
+        self.tabla_calificaciones.cellChanged.connect(self._guardar_calificacion_celda) 
+        main_layout.addWidget(self.tabla_calificaciones)
+        
+        #Llama a _cargar_datos después de que todos los widgets están definidos
+        if self._categorias_activas:
+            self._cargar_datos() 
+#Método para cargar los datos en la tabla de calificaciones.
+    def _cargar_datos(self):
+    
+        #Verificar que el combo_categoria no esté vacío antes de llamar currentText
+        categoria_seleccionada = self.combo_categoria.currentText()
+        if not categoria_seleccionada or categoria_seleccionada == "No hay categorías definidas":
+            self.tabla_calificaciones.setRowCount(0)
+            return
+        #Obtiene los datos desde la logica
+        datos = self.gestor.obtener_alumnos_con_calificaciones(categoria_seleccionada)
+        self.tabla_calificaciones.setRowCount(len(datos))
+        self.tabla_calificaciones.blockSignals(True) #Bloquear para evitar guardado al cargar
+        #Llena la tabla con los datos obtenidos
+        for fila_indice, alumno_data in enumerate(datos):
+            matricula, nombre, valor_db = alumno_data
+            
+            #Columna 0 y 1: Datos del alumno (Solo Lectura)
+            item_matricula = QTableWidgetItem(matricula)
+            item_matricula.setFlags(item_matricula.flags() & ~Qt.ItemIsEditable) 
+            self.tabla_calificaciones.setItem(fila_indice, 0, item_matricula)
+            #Columna 1: Nombre completo
+            item_nombre = QTableWidgetItem(nombre)
+            item_nombre.setFlags(item_nombre.flags() & ~Qt.ItemIsEditable) 
+            self.tabla_calificaciones.setItem(fila_indice, 1, item_nombre)
+            
+            #Columna 2: Calificación 
+            valor_str = str(valor_db) if valor_db is not None else ""
+            self.tabla_calificaciones.setItem(fila_indice, 2, QTableWidgetItem(valor_str))
+         #desbloquear señales después de cargar los datos   
+        self.tabla_calificaciones.blockSignals(False) 
+#Método para guardar la calificación al editar una celda.
+    def _guardar_calificacion_celda(self, row, column):
+#Si la columna editada no es la de calificaciones, salir
+        if column != 2 or not self._categorias_activas:
+            return
+
+        matricula = self.tabla_calificaciones.item(row, 0).text()
+        categoria = self.combo_categoria.currentText()
+        
+        self.tabla_calificaciones.blockSignals(True) #Evitar recursión
+        #Intentar guardar la calificación
+        try:
+            nuevo_valor_str = self.tabla_calificaciones.item(row, 2).text().strip()
+            
+            if not nuevo_valor_str:
+                print("Campo vacío. No se registra la calificación.")
+                self.tabla_calificaciones.blockSignals(False)
+                return
+
+            #Llama al gestor (que ya tiene inicializado _ponderacion_dao)
+            resultado_mensaje = self.gestor.registrar_calificacion(matricula, categoria, nuevo_valor_str)
+            #Manejo de errores y mensajes
+            if "Error" in resultado_mensaje:
+                QMessageBox.critical(self, "Error de validación", resultado_mensaje)
+
+            else:
+                print(resultado_mensaje)
+        #Captura errores inesperados        
+        except Exception as e:
+            QMessageBox.critical(self, "Error de Entrada", f"Error inesperado al guardar la nota: {e}")
+            
+        finally:
+            self.tabla_calificaciones.blockSignals(False)
+#Método para guardar todas las calificaciones manualmente.
+    def _guardar_todo_manual(self):
+      
+        if self._categorias_activas:
+            try:
+                self.gestor.recalcular_promedios_grupo() 
+                QMessageBox.information(self, "Éxito", "Notas guardadas. El registro es automático por celda y los promedios fueron recalculados.")
+            except AttributeError:
+                QMessageBox.critical(self, "Error", "El método 'recalcular_promedios_grupo()' no está implementado en el gestor.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al recalcular promedios: {e}")
+        else:
+            QMessageBox.warning(self, "Advertencia", "No se puede guardar, no hay categorías definidas.")
