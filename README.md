@@ -1,6 +1,5 @@
 # DirectAula - Sistema de Gestión Escolar para Docentes
 
-![DirectAula Logo Placeholder](https://via.placeholder.com/800x200/4A36BA/FFFFFF?text=DirectAula+Sistema+de+Gesti%C3%B3n+Escolar)
 
 ## Resumen del Proyecto
 
