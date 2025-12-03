@@ -33,6 +33,8 @@ El sistema está organizado en módulos que permiten una gestión integral de la
 ### Módulo de Reportes
 * **Exportar Datos:** Funcionalidad para generar y exportar reportes de calificaciones y asistencia en formatos estándar (ej. CSV, Excel).
 
+### Carpeta con todos los archivos
+* [https://drive.google.com/drive/folders/1pBJA8EJi2dTbRfkaU_ybkaFNOjXfb2WJ?usp=drive_link]
 ## Tecnologías Utilizadas
 
 * **Lenguaje:** Python
