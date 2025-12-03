@@ -30,10 +30,10 @@ El sistema está organizado en módulos que permiten una gestión integral de la
     * **Alertas de Riesgo Académico:** Alumno con calificación final menor a **7**.
     * **Alertas de Riesgo de Asistencia:** Alumno con porcentaje de asistencia menor al **80%**.
 
-### 📊 Módulo de Reportes
+### Módulo de Reportes
 * **Exportar Datos:** Funcionalidad para generar y exportar reportes de calificaciones y asistencia en formatos estándar (ej. CSV, Excel).
 
-## 🛠️ Tecnologías Utilizadas
+## Tecnologías Utilizadas
 
 * **Lenguaje:** Python
 * **Base de Datos:** SQLite (Manejada a través de `dao.py`)
