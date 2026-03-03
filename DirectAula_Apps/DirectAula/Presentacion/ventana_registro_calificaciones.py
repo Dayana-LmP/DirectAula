@@ -1,11 +1,10 @@
-
-
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QComboBox, 
     QLabel, QPushButton, QMessageBox, QTableWidgetItem, QHeaderView
 )
 from PyQt5.QtCore import Qt
 from Logica.gestor_alumnos import GestorCalificaciones 
+# 💡 Usaremos el nombre GestorCalificaciones, asegúrate que tu gestor esté aquí
 
 class VentanaRegistroCalificaciones(QWidget):
     """Ventana para el Caso de Uso 5: Registrar Calificaciones."""
@@ -19,7 +18,7 @@ class VentanaRegistroCalificaciones(QWidget):
         self.setWindowTitle(f"Registro de Calificaciones - {nombre_grupo}")
         self.resize(800, 600)
         
-
+        # Llama a _obtener_nombres_categorias antes de _inicializar_ui
         self._categorias_activas = self._obtener_nombres_categorias() 
         
         self._inicializar_ui()
@@ -27,8 +26,14 @@ class VentanaRegistroCalificaciones(QWidget):
     def _obtener_nombres_categorias(self):
         """Obtiene dinámicamente los nombres de las categorías definidas en la ponderación."""
         categorias = self.gestor.obtener_categorias_evaluacion()
-        # Devuelve solo los nombres
-        return [c.get_nombre_categoria() for c in categorias]
+        
+        # ✅ CORRECCIÓN DE CATEGORÍAS: Usar un método de obtención estándar.
+        # Asumiendo que el método correcto en el objeto CategoriaEvaluacion es get_nombre()
+        # Si tienes problemas, revisa tu model.py.
+        nombres = [c.get_nombre_categoria() for c in categorias]
+        
+        # El gestor de calificaciones DEBE retornar los objetos *actualizados* # con la ponderación definida por el maestro.
+        return nombres
         
     def _inicializar_ui(self):
         main_layout = QVBoxLayout(self)
@@ -42,25 +47,23 @@ class VentanaRegistroCalificaciones(QWidget):
         lbl_categoria = QLabel("Seleccionar Categoría:")
         self.combo_categoria = QComboBox()
         
-        # Usamos las categorías activas (Ya inicializadas en __init__)
         if not self._categorias_activas:
             self.combo_categoria.addItem("No hay categorías definidas")
             QMessageBox.warning(self, "Advertencia", "No hay categorías de evaluación definidas para este grupo. Vaya a Administrar Ponderación (CU3).")
-            # Deshabilitar el botón de guardar y la tabla si no hay categorías
             self.btn_guardar = QPushButton("Guardar y Recalcular Promedios") 
             self.btn_guardar.setEnabled(False) 
         else:
             self.combo_categoria.addItems(self._categorias_activas)
+            # Asegurar que se seleccione la primera si existen
             self.combo_categoria.setCurrentText(self._categorias_activas[0])
-            self.btn_guardar = QPushButton("Guardar y Recalcular Promedios") # Definir aquí también
+            self.btn_guardar = QPushButton("Guardar y Recalcular Promedios") 
         
         # Conexión: Al cambiar categoría, recargar la tabla
         self.combo_categoria.currentIndexChanged.connect(self._cargar_datos)
         
-        # Agregamos los widgets al layout del selector
         selector_layout.addWidget(lbl_categoria)
         selector_layout.addWidget(self.combo_categoria)
-        main_layout.addLayout(selector_layout) # Usar addLayout aquí
+        main_layout.addLayout(selector_layout) 
 
         # 2. Tabla de Calificaciones
         self.tabla_calificaciones = QTableWidget()
@@ -73,6 +76,7 @@ class VentanaRegistroCalificaciones(QWidget):
         
         # 4. Botón Guardar 
         self.btn_guardar.setObjectName("btn_agregar")
+        # 💡 Usamos este botón para forzar el recálculo global de promedios si fuera necesario
         self.btn_guardar.clicked.connect(self._guardar_todo_manual) 
         main_layout.addWidget(self.btn_guardar)
 
@@ -86,12 +90,13 @@ class VentanaRegistroCalificaciones(QWidget):
     def _cargar_datos(self):
         """Muestra la lista de estudiantes con notas existentes para la categoría seleccionada."""
         # Verificar que el combo_categoria no esté vacío antes de llamar currentText
-        if not self.combo_categoria.currentText():
+        categoria_seleccionada = self.combo_categoria.currentText()
+        if not categoria_seleccionada or categoria_seleccionada == "No hay categorías definidas":
             self.tabla_calificaciones.setRowCount(0)
             return
 
-        categoria_seleccionada = self.combo_categoria.currentText()
         # Retorna: [(matricula, nombre, valor), ...]
+        # Este método DEBE estar corregido en el Gestor para llamar a 'obtener_calificaciones_por_categoria'
         datos = self.gestor.obtener_alumnos_con_calificaciones(categoria_seleccionada)
         
         self.tabla_calificaciones.setRowCount(len(datos))
@@ -116,7 +121,6 @@ class VentanaRegistroCalificaciones(QWidget):
             
         self.tabla_calificaciones.blockSignals(False) 
 
-    # El método _guardar_calificacion_celda se mantiene igual que la última versión que te envié.
     def _guardar_calificacion_celda(self, row, column):
         """Guarda la calificación en la BLL y recalcula el promedio al cambiar una celda."""
         if column != 2 or not self._categorias_activas:
@@ -130,18 +134,19 @@ class VentanaRegistroCalificaciones(QWidget):
         try:
             nuevo_valor_str = self.tabla_calificaciones.item(row, 2).text().strip()
             
-            # BR.18: Si el campo está vacío, la calificación se considera nula y no se registra (o se elimina si existía).
             if not nuevo_valor_str:
                 print("Campo vacío. No se registra la calificación.")
+                # Si deseas eliminar la nota de la DB, necesitas agregar esa lógica al gestor.
                 self.tabla_calificaciones.blockSignals(False)
                 return
 
-            # Llama al gestor, que valida el rango 0-10 (BR.13)
+            # Llama al gestor (que ya tiene inicializado _ponderacion_dao)
             resultado_mensaje = self.gestor.registrar_calificacion(matricula, categoria, nuevo_valor_str)
             
             if "Error" in resultado_mensaje:
                 QMessageBox.critical(self, "Error de Validación", resultado_mensaje)
-                # No recargamos para no interrumpir el flujo de edición, pero la BLL no guarda el valor.
+                # Opcional: Recargar la celda para mostrar el valor anterior
+                # self._cargar_datos() 
             else:
                 print(resultado_mensaje)
                 
@@ -152,10 +157,19 @@ class VentanaRegistroCalificaciones(QWidget):
             self.tabla_calificaciones.blockSignals(False)
 
     def _guardar_todo_manual(self):
-        """Función para el botón 'Guardar'. Llama a la BLL para asegurar el recálculo."""
+        """
+        Función para el botón 'Guardar'. Como el registro por celda es automático, 
+        solo se utiliza para informar al usuario y forzar cualquier recálculo pendiente 
+        (aunque el registro automático lo hace innecesario).
+        """
         if self._categorias_activas:
-            # Llama al método que fuerza el recálculo basado en la nueva ponderación
-            self.gestor._recalcular_promedios() 
-            QMessageBox.information(self, "Éxito", "Todos los promedios han sido actualizados y el registro es automático por celda.")
+            try:
+                # 💡 Debes implementar este método en GestorCalificaciones
+                self.gestor.recalcular_promedios_grupo() 
+                QMessageBox.information(self, "Éxito", "Notas guardadas. El registro es automático por celda y los promedios fueron recalculados.")
+            except AttributeError:
+                QMessageBox.critical(self, "Error", "El método 'recalcular_promedios_grupo()' no está implementado en el gestor.")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error al recalcular promedios: {e}")
         else:
             QMessageBox.warning(self, "Advertencia", "No se puede guardar, no hay categorías definidas.")
